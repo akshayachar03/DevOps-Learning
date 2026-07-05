@@ -715,6 +715,286 @@ Multi-AZ Deployment + Cross-Region Architecture
 
 ---
 
-**End of Part 2 (Q13–Q18).**
+# Q19. What is Disaster Recovery (DR)?
 
-**Next:** Q19–Q25 (Disaster Recovery, Shared Responsibility Model, CAPEX vs OPEX, Benefits of Cloud Computing, Challenges of Cloud Computing, Choosing Cloud Deployment Models, and Azure vs AWS Comparison).
+### Answer
+
+**Definition**
+
+Disaster Recovery (DR) is the process of restoring applications and data after a disaster such as hardware failure, cyberattack, or natural disaster.
+
+### Key Points
+
+- Minimizes business downtime.
+- Protects critical business data.
+- Uses backups and replication.
+- Supports business continuity.
+- Can be implemented across regions.
+- Defines **RTO** (Recovery Time Objective).
+- Defines **RPO** (Recovery Point Objective).
+- Regular DR testing is essential.
+
+### Real-World Example
+
+If the primary data center becomes unavailable due to a natural disaster, the application automatically starts from the disaster recovery site in another region.
+
+### Azure Example
+
+- Azure Site Recovery (ASR)
+- Azure Backup
+- Geo-Redundant Storage (GRS)
+
+### AWS Equivalent
+
+- AWS Elastic Disaster Recovery
+- AWS Backup
+- Amazon S3 Cross-Region Replication
+
+### Interview Keywords
+
+**Disaster Recovery**, **RTO**, **RPO**, **Replication**, **Backup**, **Business Continuity**
+
+---
+
+# Q20. What is the Shared Responsibility Model?
+
+### Answer
+
+**Definition**
+
+The Shared Responsibility Model defines which security responsibilities belong to the **cloud provider** and which belong to the **customer**.
+
+### Key Points
+
+- Cloud provider secures the **cloud infrastructure**.
+- Customer secures **data and applications**.
+- Responsibilities vary based on the service model.
+- Customer manages OS security in **IaaS**.
+- Provider manages OS in **PaaS**.
+- Provider manages almost everything in **SaaS**.
+- Identity and access management remain the customer's responsibility.
+- Misconfigured resources are the customer's responsibility.
+
+### Real-World Example
+
+If an Azure VM is hacked because security patches were not installed, the customer is responsible—not Microsoft.
+
+### Azure Example
+
+Azure follows the Shared Responsibility Model for all Azure services.
+
+### AWS Equivalent
+
+AWS follows the same Shared Responsibility Model.
+
+### Interview Keywords
+
+**Cloud Security**, **Customer Responsibility**, **Provider Responsibility**, **IAM**, **Compliance**
+
+---
+
+# Q21. CAPEX vs OPEX
+
+### Answer
+
+| CAPEX | OPEX |
+|-------|------|
+| Capital Expenditure | Operational Expenditure |
+| Large upfront investment | Pay-as-you-go |
+| Buy hardware | Rent cloud resources |
+| High maintenance cost | Lower maintenance cost |
+| Less flexible | Highly flexible |
+| Traditional data center | Cloud computing |
+
+### Key Points
+
+- Cloud computing converts **CAPEX** into **OPEX**.
+- No need to purchase expensive hardware.
+- Businesses pay only for what they consume.
+- Improves financial flexibility.
+- Reduces infrastructure maintenance.
+
+### Real-World Example
+
+Instead of buying 50 physical servers, a company rents Azure Virtual Machines only when needed.
+
+### Azure Example
+
+Azure Subscription
+
+### AWS Equivalent
+
+AWS Pay-as-you-Go Pricing
+
+### Interview Keywords
+
+**CAPEX**, **OPEX**, **Pay-as-you-go**, **Cost Optimization**
+
+---
+
+# Q22. What are the Benefits of Cloud Computing?
+
+### Answer
+
+### Key Points
+
+- Lower infrastructure cost.
+- High scalability.
+- High availability.
+- Global accessibility.
+- Faster deployment.
+- Improved security.
+- Disaster recovery support.
+- Automatic updates.
+- Better resource utilization.
+- Supports DevOps and automation.
+
+### Real-World Example
+
+A startup launches its application globally within hours without purchasing any hardware.
+
+### Azure Example
+
+Azure provides global regions and managed services.
+
+### AWS Equivalent
+
+AWS Global Infrastructure.
+
+### Interview Keywords
+
+**Scalability**, **Elasticity**, **Automation**, **Global Infrastructure**, **Cost Saving**
+
+---
+
+# Q23. What are the Challenges of Cloud Computing?
+
+### Answer
+
+### Key Points
+
+- Vendor lock-in.
+- Internet dependency.
+- Data privacy concerns.
+- Compliance requirements.
+- Cost management.
+- Security misconfigurations.
+- Service outages.
+- Skills gap.
+- Migration complexity.
+- Legacy application compatibility.
+
+### Real-World Example
+
+A company migrates to the cloud but experiences higher costs due to oversized virtual machines.
+
+### Azure Example
+
+Azure Cost Management helps monitor spending.
+
+### AWS Equivalent
+
+AWS Cost Explorer helps optimize costs.
+
+### Interview Keywords
+
+**Vendor Lock-in**, **Cloud Security**, **Compliance**, **Cost Management**
+
+---
+
+# Q24. When should you choose each Cloud Deployment Model?
+
+### Answer
+
+| Deployment Model | Best Choice When |
+|------------------|------------------|
+| **Public Cloud** | Low cost, startups, web applications |
+| **Private Cloud** | Sensitive data, compliance, banking, healthcare |
+| **Hybrid Cloud** | Gradual migration, existing data center integration |
+| **Multi Cloud** | Avoid vendor lock-in, improve resilience, use best services from multiple providers |
+
+### Real-World Example
+
+- Startup → Public Cloud
+- Bank → Private Cloud
+- Enterprise migration → Hybrid Cloud
+- Global enterprise → Multi Cloud
+
+### Azure Example
+
+Azure Public Cloud + Azure Arc + Azure Stack HCI
+
+### AWS Equivalent
+
+AWS + AWS Outposts + Direct Connect
+
+### Interview Keywords
+
+**Deployment Strategy**, **Hybrid Connectivity**, **Compliance**, **Vendor Lock-in**
+
+---
+
+# Q25. How do Azure and AWS compare in Cloud Services?
+
+### Answer
+
+| Feature | Microsoft Azure | AWS |
+|----------|-----------------|-----|
+| Market Position | Strong Enterprise Adoption | Largest Cloud Provider |
+| Best Integration | Microsoft Products | Broadest Service Portfolio |
+| Identity Service | Microsoft Entra ID (Azure AD) | AWS IAM |
+| Virtual Machine | Azure Virtual Machines | Amazon EC2 |
+| Object Storage | Azure Blob Storage | Amazon S3 |
+| Managed Database | Azure SQL Database | Amazon RDS |
+| Serverless | Azure Functions | AWS Lambda |
+| Kubernetes | Azure Kubernetes Service (AKS) | Amazon EKS |
+
+### Key Points
+
+- Both offer **IaaS, PaaS, SaaS, and FaaS**.
+- Both provide global infrastructure.
+- Both support high availability and disaster recovery.
+- Azure integrates well with Microsoft environments.
+- AWS offers the widest range of cloud services.
+- Both support DevOps, containers, AI, and serverless computing.
+- Choosing between them depends on business requirements and existing technology stack.
+
+### Real-World Example
+
+A company using Microsoft Active Directory and Microsoft 365 may prefer Azure, while a cloud-native startup may choose AWS for its broad service ecosystem.
+
+### Interview Keywords
+
+**Cloud Provider**, **Global Infrastructure**, **Managed Services**, **Serverless**, **Containers**, **DevOps**
+
+---
+
+# Cloud Computing Interview Summary
+
+## Frequently Asked Topics
+
+- Cloud Computing
+- Evolution of Cloud Computing
+- Characteristics of Cloud Computing
+- Public Cloud
+- Private Cloud
+- Hybrid Cloud
+- Multi Cloud
+- IaaS
+- PaaS
+- SaaS
+- FaaS
+- Virtualization
+- Elasticity
+- Scalability
+- High Availability
+- Fault Tolerance
+- Disaster Recovery (RTO/RPO)
+- Shared Responsibility Model
+- CAPEX vs OPEX
+- Benefits of Cloud Computing
+- Challenges of Cloud Computing
+- Cloud Deployment Models
+- Azure vs AWS Cloud Services
+
+---
