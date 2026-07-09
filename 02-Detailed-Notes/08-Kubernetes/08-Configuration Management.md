@@ -2,17 +2,22 @@
 
 ## Overview
 
-Configuration Management in Kubernetes is the process of storing, managing, and providing application configuration separately from the application container image.
+Configuration Management in Kubernetes is the process of storing and managing **application configuration** separately from the application code and container image.
 
-Instead of hardcoding configuration values (such as database URLs, API endpoints, or passwords) inside the application or Docker image, Kubernetes provides **ConfigMaps** and **Secrets** to manage configuration dynamically.
+Instead of rebuilding container images whenever a configuration changes, Kubernetes allows configurations to be injected into Pods at runtime using:
 
-Configuration Management enables the same container image to be deployed across Development, Testing, and Production environments with different configurations.
+- ConfigMaps
+- Secrets
+- Environment Variables
+- Mounted Configuration Files
+
+This separation follows the **12-Factor App** principle and simplifies deployments across multiple environments.
 
 > **Interview Tip**
 >
-> - **ConfigMap** → Non-sensitive configuration
-> - **Secret** → Sensitive configuration (passwords, API keys, certificates)
-> - Environment Variables and Volumes are the two primary ways to consume ConfigMaps and Secrets.
+> **ConfigMaps** store **non-sensitive** configuration.
+>
+> **Secrets** store **sensitive** configuration such as passwords, API keys, and certificates.
 
 ---
 
@@ -21,12 +26,12 @@ Configuration Management enables the same container image to be deployed across 
 Configuration Management is used to:
 
 - Separate configuration from application code
-- Avoid rebuilding container images for configuration changes
-- Manage environment-specific settings
+- Avoid rebuilding container images
+- Simplify environment-specific deployments
 - Secure sensitive information
-- Improve portability
-- Simplify deployments
-- Support DevOps and CI/CD practices
+- Centralize configuration management
+- Support CI/CD deployments
+- Enable dynamic configuration updates
 
 ---
 
@@ -34,50 +39,29 @@ Configuration Management is used to:
 
 ```mermaid
 flowchart LR
+    ConfigMap[ConfigMap]
+    Secret[Secret]
 
-Developer
+    ConfigMap --> Pod
+    Secret --> Pod
 
-↓
-
-ConfigMap / Secret
-
-↓
-
-Kubernetes API Server
-
-↓
-
-Pod
-
-↓
-
-Container
-
-↓
-
-Application
+    Pod --> Container
 ```
 
-Configuration Delivery
+Configuration Flow
 
 ```mermaid
 flowchart LR
+    Admin[Administrator]
+    Config[Create ConfigMap / Secret]
+    API[Kubernetes API Server]
+    Pod[Pod]
+    Container[Application]
 
-ConfigMap
-
---> Environment Variables
-
-ConfigMap
-
---> Mounted Files
-
-Secret
-
---> Environment Variables
-
-Secret
-
---> Mounted Files
+    Admin --> Config
+    Config --> API
+    API --> Pod
+    Pod --> Container
 ```
 
 ---
@@ -85,107 +69,66 @@ Secret
 ## Key Components
 
 | Component | Purpose |
-|-----------|----------|
+|-----------|---------|
 | ConfigMap | Stores non-sensitive configuration |
-| Secret | Stores sensitive information |
-| Environment Variables | Pass configuration to containers |
-| Volume Mount | Mount configuration files |
-| Kubernetes API Server | Stores configuration objects |
+| Secret | Stores sensitive configuration |
+| Environment Variables | Inject configuration into containers |
+| Volume Mount | Mount configuration as files |
+| Pod | Consumes configuration |
 
 ---
 
 ## Types (if applicable)
 
-### Configuration Sources
+Configuration Sources
 
-- ConfigMap
-- Secret
-
-### Configuration Delivery
-
+- ConfigMaps
+- Secrets
 - Environment Variables
-- Volume Mounts
+- Mounted Volumes
 
 ---
 
-## Lifecycle /Workflow
+## Lifecycle / Workflow
 
 ```mermaid
 flowchart LR
+    A[Create ConfigMap / Secret]
+    B[Store in Kubernetes]
+    C[Reference in Pod]
+    D[Inject into Container]
+    E[Application Uses Configuration]
 
-Create ConfigMap/Secret
-
-↓
-
-Store in API Server
-
-↓
-
-Deploy Pod
-
-↓
-
-Inject Configuration
-
-↓
-
-Application Uses Configuration
+    A --> B --> C --> D --> E
 ```
 
 ---
 
 ## Configuration / Syntax (if applicable)
 
-ConfigMap
+Using ConfigMap as Environment Variables
 
 ```yaml
-apiVersion: v1
-kind: ConfigMap
-
-metadata:
-  name: app-config
-
-data:
-  APP_ENV: production
-  DB_HOST: mysql
+envFrom:
+- configMapRef:
+    name: app-config
 ```
 
-Secret
+Using Secret as Environment Variables
 
 ```yaml
-apiVersion: v1
-kind: Secret
-
-metadata:
-  name: db-secret
-
-type: Opaque
-
-stringData:
-  username: admin
-  password: password123
+envFrom:
+- secretRef:
+    name: app-secret
 ```
 
-Using ConfigMap
+Mount ConfigMap as Files
 
 ```yaml
-env:
-- name: APP_ENV
-  valueFrom:
-    configMapKeyRef:
-      name: app-config
-      key: APP_ENV
-```
-
-Using Secret
-
-```yaml
-env:
-- name: DB_PASSWORD
-  valueFrom:
-    secretKeyRef:
-      name: db-secret
-      key: password
+volumes:
+- name: config-volume
+  configMap:
+    name: app-config
 ```
 
 ---
@@ -195,15 +138,14 @@ env:
 Create ConfigMap
 
 ```bash
-kubectl create configmap app-config \
---from-literal=APP_ENV=production
+kubectl create configmap app-config --from-literal=APP_ENV=production
 ```
 
 Create Secret
 
 ```bash
-kubectl create secret generic db-secret \
---from-literal=password=password123
+kubectl create secret generic app-secret \
+--from-literal=password=MyPassword123
 ```
 
 View ConfigMaps
@@ -227,13 +169,7 @@ kubectl describe configmap app-config
 Describe Secret
 
 ```bash
-kubectl describe secret db-secret
-```
-
-View YAML
-
-```bash
-kubectl get configmap app-config -o yaml
+kubectl describe secret app-secret
 ```
 
 Delete ConfigMap
@@ -245,7 +181,7 @@ kubectl delete configmap app-config
 Delete Secret
 
 ```bash
-kubectl delete secret db-secret
+kubectl delete secret app-secret
 ```
 
 ---
@@ -253,68 +189,66 @@ kubectl delete secret db-secret
 ## Important Files (if applicable)
 
 | File | Purpose |
-|------|----------|
+|------|---------|
 | configmap.yaml | ConfigMap definition |
 | secret.yaml | Secret definition |
-| deployment.yaml | Uses ConfigMaps and Secrets |
-| pod.yaml | Inject configuration |
+| deployment.yaml | References ConfigMaps and Secrets |
 
 ---
 
 ## Real-World Use Cases
 
-- Database connection strings
+- Database configuration
 - Application configuration
 - API endpoints
 - Feature flags
-- Credentials
+- Database passwords
 - TLS certificates
-- Cloud authentication
-- Environment-specific settings
+- API tokens
+- Cloud credentials
 
 ---
 
 ## Advantages
 
 - Separates configuration from code
-- Reusable across environments
-- Supports dynamic updates
+- Easier deployments
 - Improves security
-- Simplifies deployments
-- Enables immutable container images
+- Supports environment-specific configurations
+- Simplifies CI/CD
+- Enables reusable container images
 
 ---
 
 ## Limitations
 
-- ConfigMaps are not encrypted
-- Secrets are Base64 encoded by default (not encryption)
-- Secret size is limited
-- Pods may need restarting after configuration changes
-- Improper Secret handling can expose sensitive data
+- ConfigMap data is not encrypted
+- Secrets are Base64 encoded by default (not encrypted)
+- Pod restart may be required for environment variable updates
+- Large configurations become difficult to manage
 
 ---
 
 ## Common Interview Questions (Concept Only)
 
-- What is Configuration Management?
+- What is Configuration Management in Kubernetes?
 - Why should configuration be separated from application code?
-- What is the difference between ConfigMap and Secret?
-- How are ConfigMaps consumed by Pods?
-- How are Secrets injected into containers?
-- Can ConfigMaps be updated without rebuilding images?
-- Are Kubernetes Secrets encrypted?
-- How can configuration be mounted as files?
+- Difference between ConfigMap and Secret?
+- How do Pods consume ConfigMaps?
+- How do Secrets improve security?
+- Can ConfigMaps be updated without rebuilding the image?
+- Can Secrets be mounted as files?
+- How are ConfigMaps injected into Pods?
 
 ---
 
 ## Common Mistakes
 
 - Storing passwords inside ConfigMaps
-- Hardcoding configuration in Docker images
-- Confusing Base64 encoding with encryption
+- Hardcoding configuration inside container images
 - Forgetting to restart Pods after configuration changes
-- Storing sensitive information in Git repositories
+- Storing certificates in ConfigMaps
+- Exposing Secrets in application logs
 
 ---
 
@@ -322,11 +256,11 @@ kubectl delete secret db-secret
 
 | Problem | Cause | Solution |
 |----------|--------|----------|
-| Pod can't read ConfigMap | Wrong name | Verify ConfigMap name |
-| Secret not available | Incorrect key | Check Secret keys |
-| Environment variable empty | Wrong reference | Verify `valueFrom` |
-| Pod startup failure | Missing ConfigMap | Create missing resource |
-| Secret exposed | Stored in Git | Use secure secret management |
+| Configuration not available | ConfigMap missing | Verify ConfigMap exists |
+| Secret not found | Wrong Secret name | Verify Secret reference |
+| Environment variable missing | Incorrect YAML | Check `env` or `envFrom` |
+| Mounted files missing | Incorrect volume mount | Verify volume configuration |
+| Pod startup failure | Missing ConfigMap/Secret | Check Pod events |
 
 Useful Commands
 
@@ -337,16 +271,16 @@ kubectl get secrets
 
 kubectl describe configmap app-config
 
-kubectl describe secret db-secret
+kubectl describe secret app-secret
 
-kubectl exec -it <pod-name> -- env
+kubectl describe pod <pod-name>
 ```
 
 ---
 
 ## Summary
 
-Configuration Management enables Kubernetes applications to separate configuration from application code. ConfigMaps store non-sensitive configuration, while Secrets securely store sensitive information. These configurations can be injected into containers through Environment Variables or mounted as files, making applications portable, secure, and easier to manage across different environments.
+Configuration Management in Kubernetes separates application configuration from container images using ConfigMaps, Secrets, Environment Variables, and mounted volumes. This approach improves security, simplifies deployments, and supports environment-specific configurations while following cloud-native best practices.
 
 ---
 
@@ -356,24 +290,31 @@ Configuration Management enables Kubernetes applications to separate configurati
 
 A **ConfigMap** is a Kubernetes object used to store **non-sensitive configuration data** as key-value pairs.
 
-Applications retrieve configuration from ConfigMaps instead of embedding it inside the container image.
+Applications retrieve ConfigMap values during runtime instead of embedding configuration inside container images.
+
+Examples include:
+
+- Application settings
+- Database hostnames
+- Feature flags
+- URLs
+- Logging levels
 
 > **Interview Tip**
 >
-> ConfigMaps should never contain passwords or API keys.
+> Never store passwords or API keys in ConfigMaps.
 
 ---
 
 ## Why It Is Used
 
-ConfigMaps are used to store:
+ConfigMaps are used to:
 
-- Application settings
-- Database hostnames
-- URLs
-- Port numbers
-- Feature flags
-- Configuration files
+- Store application configuration
+- Separate configuration from code
+- Share configuration across Pods
+- Simplify environment management
+- Enable reusable container images
 
 ---
 
@@ -381,20 +322,8 @@ ConfigMaps are used to store:
 
 ```mermaid
 flowchart LR
-
-ConfigMap
-
-↓
-
-Pod
-
-↓
-
-Container
-
-↓
-
-Application
+    ConfigMap --> Pod
+    Pod --> Container
 ```
 
 ---
@@ -402,21 +331,21 @@ Application
 ## Key Components
 
 | Component | Purpose |
-|-----------|----------|
-| Name | ConfigMap identifier |
-| Data | Key-value pairs |
-| Keys | Configuration names |
-| Values | Configuration values |
+|-----------|---------|
+| Key | Configuration name |
+| Value | Configuration value |
+| ConfigMap | Stores configuration |
 
 ---
 
 ## Types (if applicable)
 
-ConfigMaps can be consumed as:
+ConfigMap can be created from:
 
-- Environment Variables
-- Mounted Volumes
-- Command-line arguments
+- YAML file
+- Literal values
+- Files
+- Directories
 
 ---
 
@@ -424,27 +353,17 @@ ConfigMaps can be consumed as:
 
 ```mermaid
 flowchart LR
+    A[Create ConfigMap]
+    B[Store in Kubernetes]
+    C[Reference in Pod]
+    D[Application Reads Configuration]
 
-Create ConfigMap
-
-↓
-
-Deploy Pod
-
-↓
-
-Inject Configuration
-
-↓
-
-Application Reads Values
+    A --> B --> C --> D
 ```
 
 ---
 
 ## Configuration / Syntax (if applicable)
-
-Example
 
 ```yaml
 apiVersion: v1
@@ -455,7 +374,15 @@ metadata:
 
 data:
   APP_ENV: production
-  LOG_LEVEL: info
+  LOG_LEVEL: INFO
+```
+
+Use as Environment Variables
+
+```yaml
+envFrom:
+- configMapRef:
+    name: app-config
 ```
 
 ---
@@ -492,68 +419,64 @@ kubectl delete configmap app-config
 ## Important Files (if applicable)
 
 | File | Purpose |
-|------|----------|
+|------|---------|
 | configmap.yaml | ConfigMap definition |
 
 ---
 
 ## Real-World Use Cases
 
-- Application configuration
+- Database hostnames
+- API endpoints
 - Logging configuration
-- Database hostname
 - Feature flags
-- Environment-specific values
 
 ---
 
 ## Advantages
 
 - Easy configuration management
-- Environment independent
 - Reusable
-- No image rebuild required
+- Separate from application code
 
 ---
 
 ## Limitations
 
-- Not secure for sensitive data
-- Limited object size
-- Configuration changes may require Pod restart
+- Not encrypted
+- Not suitable for secrets
 
 ---
 
 ## Common Interview Questions (Concept Only)
 
-- What is a ConfigMap?
-- What data should be stored in ConfigMaps?
+- What is ConfigMap?
+- How do ConfigMaps work?
 - Can ConfigMaps store passwords?
-- How are ConfigMaps consumed?
+- How are ConfigMaps mounted?
 
 ---
 
 ## Common Mistakes
 
-- Storing secrets in ConfigMaps
-- Hardcoding configuration in Docker images
-- Incorrect ConfigMap references
+- Storing secrets
+- Hardcoding values
 
 ---
 
 ## Troubleshooting
 
 ```bash
-kubectl describe configmap app-config
+kubectl get configmaps
 
-kubectl exec -it <pod-name> -- env
+kubectl describe configmap app-config
 ```
 
 ---
 
 ## Summary
 
-ConfigMaps store non-sensitive application configuration separately from container images, allowing the same image to be reused across multiple environments.
+ConfigMaps store non-sensitive configuration data and allow applications to load configuration dynamically without rebuilding container images.
 
 ---
 
@@ -561,26 +484,35 @@ ConfigMaps store non-sensitive application configuration separately from contain
 
 ## Overview
 
-A **Secret** is a Kubernetes object used to securely store sensitive information such as passwords, API keys, tokens, and certificates.
+A **Secret** stores **sensitive information** required by applications.
 
-Secrets help prevent sensitive data from being embedded in application code or container images.
+Examples:
+
+- Passwords
+- API Keys
+- Database credentials
+- SSH Keys
+- TLS Certificates
+
+Secrets can be injected into Pods as:
+
+- Environment Variables
+- Mounted files
 
 > **Interview Tip**
 >
-> Kubernetes Secrets are **Base64 encoded**, **not encrypted by default**. Encryption at rest must be enabled separately.
+> Kubernetes Secrets are **Base64 encoded**, not encrypted by default. Enable **Encryption at Rest** for production environments.
 
 ---
 
 ## Why It Is Used
 
-Secrets are used to store:
+Secrets provide:
 
-- Passwords
-- Database credentials
-- API keys
-- OAuth tokens
-- SSH keys
-- TLS certificates
+- Secure credential management
+- Centralized secret storage
+- Better application security
+- Easier secret rotation
 
 ---
 
@@ -588,20 +520,8 @@ Secrets are used to store:
 
 ```mermaid
 flowchart LR
-
-Secret
-
-↓
-
-Pod
-
-↓
-
-Container
-
-↓
-
-Application
+    Secret --> Pod
+    Pod --> Container
 ```
 
 ---
@@ -609,21 +529,21 @@ Application
 ## Key Components
 
 | Component | Purpose |
-|-----------|----------|
+|-----------|---------|
 | Secret | Stores sensitive data |
-| Key | Secret identifier |
-| Value | Base64-encoded value |
+| Key | Secret name |
+| Value | Secret value |
 
 ---
 
 ## Types (if applicable)
 
-| Secret Type | Purpose |
-|-------------|----------|
-| Opaque | Generic secrets |
-| kubernetes.io/tls | TLS certificates |
-| kubernetes.io/dockerconfigjson | Docker registry credentials |
-| kubernetes.io/basic-auth | Username/password |
+Common Secret Types
+
+- Opaque
+- TLS
+- Docker Registry
+- Service Account Token
 
 ---
 
@@ -631,20 +551,12 @@ Application
 
 ```mermaid
 flowchart LR
+    A[Create Secret]
+    B[Store in Kubernetes]
+    C[Reference in Pod]
+    D[Application Uses Secret]
 
-Create Secret
-
-↓
-
-Store in API Server
-
-↓
-
-Inject into Pod
-
-↓
-
-Application Uses Secret
+    A --> B --> C --> D
 ```
 
 ---
@@ -656,13 +568,12 @@ apiVersion: v1
 kind: Secret
 
 metadata:
-  name: db-secret
+  name: app-secret
 
 type: Opaque
 
-stringData:
-  username: admin
-  password: password123
+data:
+  password: TXlQYXNzd29yZA==
 ```
 
 ---
@@ -672,8 +583,8 @@ stringData:
 Create
 
 ```bash
-kubectl create secret generic db-secret \
---from-literal=password=password123
+kubectl create secret generic app-secret \
+--from-literal=password=MyPassword123
 ```
 
 View
@@ -685,13 +596,13 @@ kubectl get secrets
 Describe
 
 ```bash
-kubectl describe secret db-secret
+kubectl describe secret app-secret
 ```
 
 Delete
 
 ```bash
-kubectl delete secret db-secret
+kubectl delete secret app-secret
 ```
 
 ---
@@ -699,53 +610,49 @@ kubectl delete secret db-secret
 ## Important Files (if applicable)
 
 | File | Purpose |
-|------|----------|
+|------|---------|
 | secret.yaml | Secret definition |
 
 ---
 
 ## Real-World Use Cases
 
-- Database passwords
-- Cloud credentials
-- SSH keys
+- Database credentials
+- API Keys
 - TLS certificates
-- Registry credentials
+- Docker Registry credentials
 
 ---
 
 ## Advantages
 
-- Keeps credentials separate from code
-- Supports secure application deployment
-- Can be mounted or injected
-- RBAC can restrict access
+- Better security
+- Centralized secret management
+- Supports multiple secret types
 
 ---
 
 ## Limitations
 
 - Base64 encoding is not encryption
-- Limited size
-- Requires proper RBAC configuration
-- Sensitive data can still be exposed if mishandled
+- Requires RBAC protection
 
 ---
 
 ## Common Interview Questions (Concept Only)
 
 - What is a Secret?
-- Difference between ConfigMap and Secret?
+- ConfigMap vs Secret?
 - Are Secrets encrypted?
-- How are Secrets consumed by Pods?
+- How are Secrets mounted?
 
 ---
 
 ## Common Mistakes
 
-- Assuming Base64 encoding is encryption
-- Committing Secrets to Git
-- Using ConfigMaps instead of Secrets for credentials
+- Assuming Base64 is encryption
+- Logging secret values
+- Storing secrets in Git
 
 ---
 
@@ -754,16 +661,14 @@ kubectl delete secret db-secret
 ```bash
 kubectl get secrets
 
-kubectl describe secret db-secret
-
-kubectl exec -it <pod-name> -- env
+kubectl describe secret app-secret
 ```
 
 ---
 
 ## Summary
 
-Secrets securely store sensitive information required by applications. They improve security by separating credentials from application code and container images.
+Secrets securely store sensitive application data and should always be used instead of ConfigMaps for passwords, certificates, and credentials.
 
 ---
 
@@ -771,15 +676,9 @@ Secrets securely store sensitive information required by applications. They impr
 
 ## Overview
 
-Environment Variables are one of the most common ways to provide configuration to containers running inside Pods.
+Environment Variables allow ConfigMaps and Secrets to be injected directly into containers as operating system environment variables.
 
-Values can come from:
-
-- Static values
-- ConfigMaps
-- Secrets
-
-Applications read these values at runtime without modifying the application image.
+Applications can read these variables without changing application code.
 
 ---
 
@@ -788,10 +687,9 @@ Applications read these values at runtime without modifying the application imag
 Environment Variables are used to:
 
 - Configure applications
-- Inject credentials
-- Provide runtime configuration
-- Support multiple environments
-- Avoid hardcoded values
+- Inject runtime values
+- Pass secrets securely
+- Support environment-specific deployments
 
 ---
 
@@ -799,20 +697,14 @@ Environment Variables are used to:
 
 ```mermaid
 flowchart LR
+    ConfigMap[ConfigMap / Secret]
+    Pod[Pod]
+    Container[Container]
+    App[Application]
 
-ConfigMap / Secret
-
-↓
-
-Environment Variables
-
-↓
-
-Container
-
-↓
-
-Application
+    ConfigMap --> Pod
+    Pod --> Container
+    Container --> App
 ```
 
 ---
@@ -820,20 +712,21 @@ Application
 ## Key Components
 
 | Component | Purpose |
-|-----------|----------|
-| env | Define environment variables |
-| value | Static value |
-| valueFrom | Read from ConfigMap or Secret |
+|-----------|---------|
+| env | Individual variables |
+| envFrom | Import all values |
+| valueFrom | Reference ConfigMaps or Secrets |
 
 ---
 
 ## Types (if applicable)
 
-| Type | Description |
-|------|-------------|
-| Static | Hardcoded value |
-| ConfigMap | Non-sensitive configuration |
-| Secret | Sensitive configuration |
+Environment Variable Sources
+
+- Direct values
+- ConfigMaps
+- Secrets
+- Downward API
 
 ---
 
@@ -841,27 +734,19 @@ Application
 
 ```mermaid
 flowchart LR
+    A[Create ConfigMap / Secret]
+    B[Reference in Pod]
+    C[Inject Environment Variables]
+    D[Application Reads Variables]
 
-Create ConfigMap/Secret
-
-↓
-
-Reference in Pod
-
-↓
-
-Pod Starts
-
-↓
-
-Environment Variables Available
+    A --> B --> C --> D
 ```
 
 ---
 
 ## Configuration / Syntax (if applicable)
 
-Static Value
+Single Variable
 
 ```yaml
 env:
@@ -869,31 +754,31 @@ env:
   value: production
 ```
 
-ConfigMap
+From ConfigMap
 
 ```yaml
-env:
-- name: APP_ENV
-  valueFrom:
-    configMapKeyRef:
-      name: app-config
-      key: APP_ENV
+envFrom:
+- configMapRef:
+    name: app-config
 ```
 
-Secret
+From Secret
 
 ```yaml
-env:
-- name: PASSWORD
-  valueFrom:
-    secretKeyRef:
-      name: db-secret
-      key: password
+envFrom:
+- secretRef:
+    name: app-secret
 ```
 
 ---
 
 ## Important Commands (if applicable)
+
+View Pod
+
+```bash
+kubectl describe pod <pod-name>
+```
 
 View Environment Variables
 
@@ -901,92 +786,68 @@ View Environment Variables
 kubectl exec -it <pod-name> -- env
 ```
 
-Describe Pod
-
-```bash
-kubectl describe pod <pod-name>
-```
-
 ---
 
 ## Important Files (if applicable)
 
 | File | Purpose |
-|------|----------|
-| deployment.yaml | Environment variables |
-| pod.yaml | Runtime configuration |
+|------|---------|
+| deployment.yaml | Environment variable configuration |
 
 ---
 
 ## Real-World Use Cases
 
-- Database connections
-- Application mode
-- API endpoints
-- Logging levels
-- Feature flags
+- Database URLs
+- Logging configuration
 - Cloud credentials
+- Feature flags
+- API endpoints
 
 ---
 
 ## Advantages
 
 - Easy configuration
-- Environment-specific deployment
-- Works with ConfigMaps and Secrets
-- No image rebuild required
+- Runtime injection
+- No application rebuild
 
 ---
 
 ## Limitations
 
-- Values are fixed when the container starts
-- Changes typically require Pod restart
-- Environment variables may be visible to processes inside the container
+- Updates may require Pod restart
+- Not suitable for very large configurations
 
 ---
 
 ## Common Interview Questions (Concept Only)
 
-- How do you pass environment variables to a Pod?
-- Can ConfigMaps populate environment variables?
-- Can Secrets populate environment variables?
-- Which is better: Environment Variables or Volume Mounts?
+- How are ConfigMaps injected into Pods?
+- How are Secrets exposed as environment variables?
+- What is `envFrom`?
+- Difference between `env` and `envFrom`?
 
 ---
 
 ## Common Mistakes
 
-- Hardcoding sensitive values
-- Incorrect `valueFrom` references
-- Forgetting to restart Pods after updates
-- Exposing secrets through application logs
+- Hardcoding values
+- Exposing secrets through logs
+- Forgetting to restart Pods after configuration changes
 
 ---
 
 ## Troubleshooting
 
-| Problem | Cause | Solution |
-|----------|--------|----------|
-| Variable missing | Incorrect reference | Verify `valueFrom` configuration |
-| Empty value | Wrong key name | Check ConfigMap or Secret keys |
-| Pod startup failure | Missing ConfigMap or Secret | Create or correct the resource |
-| Configuration not updated | Existing Pod still running | Restart the Pod or rollout the Deployment |
-
-Useful Commands
-
 ```bash
 kubectl exec -it <pod-name> -- env
 
 kubectl describe pod <pod-name>
-
-kubectl get configmaps
-
-kubectl get secrets
 ```
 
 ---
 
 ## Summary
 
-Environment Variables provide runtime configuration to Kubernetes containers and are commonly populated from ConfigMaps or Secrets. They enable flexible, environment-specific deployments without modifying container images and are one of the most frequently used configuration mechanisms in production Kubernetes environments.
+Environment Variables provide a simple and widely used method for passing configuration and secrets into containers at runtime. They integrate seamlessly with ConfigMaps and Secrets, making application configuration flexible, reusable, and production-ready.
