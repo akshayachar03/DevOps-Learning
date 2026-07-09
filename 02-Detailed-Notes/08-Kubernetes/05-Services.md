@@ -2,19 +2,20 @@
 
 ## Overview
 
-A **Service** in Kubernetes is an abstraction that provides a **stable network endpoint** for accessing one or more Pods.
+A **Service** in Kubernetes is an abstraction that provides a **stable network endpoint** to access one or more Pods.
 
-Pods are **ephemeral**—they can be created, deleted, or rescheduled at any time, causing their IP addresses to change. A Service solves this problem by exposing a **stable IP address and DNS name**, allowing applications to communicate reliably without needing to know individual Pod IPs.
+Since Pods are **ephemeral** (they can be created, deleted, or recreated), their IP addresses change over time. A Service provides a **fixed IP address (ClusterIP)** and **DNS name**, allowing applications to communicate reliably without knowing Pod IP addresses.
 
-A Service selects Pods using **labels and selectors** and automatically routes traffic to healthy Pods.
+Services also provide:
+
+- Service Discovery
+- Internal Load Balancing
+- High Availability
+- Stable Networking
 
 > **Interview Tip**
 >
-> Pods are temporary, but **Services provide a permanent way to access them**.
->
-> One of the most common interview questions is:
->
-> **"Why do we need Services if Pods already have IP addresses?"**
+> Applications should **never communicate directly with Pod IPs**. Always access Pods through a **Service**.
 
 ---
 
@@ -23,42 +24,44 @@ A Service selects Pods using **labels and selectors** and automatically routes t
 Services are used to:
 
 - Provide a stable endpoint for Pods
-- Enable communication between applications
 - Load balance traffic across multiple Pods
-- Support service discovery
+- Enable Service Discovery using DNS
 - Expose applications internally or externally
-- Decouple clients from Pod lifecycle
+- Decouple applications from changing Pod IPs
+- Improve availability of applications
 
 ---
 
 ## Architecture / Working
 
 ```mermaid
-flowchart LR
+flowchart TB
+    Client[Client]
+    Service[Kubernetes Service]
+    Proxy[kube-proxy]
+    Pod1[Pod 1]
+    Pod2[Pod 2]
+    Pod3[Pod 3]
 
-Client
-
-Client --> Service
-
-Service --> Pod1
-
-Service --> Pod2
-
-Service --> Pod3
+    Client --> Service
+    Service --> Proxy
+    Proxy --> Pod1
+    Proxy --> Pod2
+    Proxy --> Pod3
 ```
 
-Service Discovery
+Traffic Flow
 
 ```mermaid
 flowchart LR
+    Request[Client Request]
+    Service[Service]
+    Endpoints[Endpoints]
+    Pod[Matching Pod]
 
-Frontend --> frontend-service
-
-frontend-service --> FrontendPods
-
-Backend --> backend-service
-
-backend-service --> BackendPods
+    Request --> Service
+    Service --> Endpoints
+    Endpoints --> Pod
 ```
 
 ---
@@ -67,23 +70,26 @@ backend-service --> BackendPods
 
 | Component | Purpose |
 |-----------|----------|
-| Service | Stable network endpoint |
-| Selector | Selects matching Pods |
-| Labels | Identify Pods |
-| Endpoints | List of healthy Pod IPs |
-| Cluster IP | Internal Service IP |
+| Service | Stable endpoint |
+| Selector | Selects target Pods |
+| Labels | Used by selectors |
+| Endpoints | List of Pod IPs |
 | kube-proxy | Routes traffic |
+| ClusterIP | Internal Service IP |
+| CoreDNS | DNS resolution |
 
 ---
 
 ## Types (if applicable)
 
-| Service Type | Access Scope | Common Use Case |
-|--------------|--------------|-----------------|
-| ClusterIP | Internal Cluster | Microservices |
-| NodePort | External via Node IP | Testing |
-| LoadBalancer | External Load Balancer | Production |
-| ExternalName | External DNS Mapping | External Services |
+Kubernetes supports four main Service types:
+
+| Type | Accessible From | Common Use |
+|------|-----------------|------------|
+| ClusterIP | Inside Cluster | Internal applications |
+| NodePort | Outside Cluster via Node IP | Testing and development |
+| LoadBalancer | Internet | Production workloads |
+| ExternalName | External DNS | External services |
 
 ---
 
@@ -91,24 +97,14 @@ backend-service --> BackendPods
 
 ```mermaid
 flowchart LR
+    A[Create Pods]
+    B[Assign Labels]
+    C[Create Service]
+    D[Selector Matches Pods]
+    E[Endpoints Created]
+    F[Traffic Routed]
 
-Pod Created
-
-↓
-
-Labels Assigned
-
-↓
-
-Service Selector Matches
-
-↓
-
-Endpoints Created
-
-↓
-
-Traffic Routed
+    A --> B --> C --> D --> E --> F
 ```
 
 ---
@@ -119,7 +115,6 @@ Example Service
 
 ```yaml
 apiVersion: v1
-
 kind: Service
 
 metadata:
@@ -130,16 +125,10 @@ spec:
     app: nginx
 
   ports:
-  - port: 80
-    targetPort: 80
+    - port: 80
+      targetPort: 80
 
   type: ClusterIP
-```
-
-Create Service
-
-```bash
-kubectl apply -f service.yaml
 ```
 
 ---
@@ -149,13 +138,13 @@ kubectl apply -f service.yaml
 List Services
 
 ```bash
-kubectl get services
+kubectl get svc
 ```
 
 Describe Service
 
 ```bash
-kubectl describe service <service-name>
+kubectl describe svc nginx-service
 ```
 
 View Endpoints
@@ -164,18 +153,16 @@ View Endpoints
 kubectl get endpoints
 ```
 
+View Service YAML
+
+```bash
+kubectl get svc nginx-service -o yaml
+```
+
 Delete Service
 
 ```bash
-kubectl delete service <service-name>
-```
-
-Expose Deployment
-
-```bash
-kubectl expose deployment nginx \
---port=80 \
---target-port=80
+kubectl delete svc nginx-service
 ```
 
 ---
@@ -183,21 +170,20 @@ kubectl expose deployment nginx \
 ## Important Files (if applicable)
 
 | File | Purpose |
-|------|----------|
+|------|---------|
 | service.yaml | Service definition |
-| deployment.yaml | Creates Pods |
-| ingress.yaml | External routing |
+| deployment.yaml | Pods used by Service |
 
 ---
 
 ## Real-World Use Cases
 
-- Frontend to backend communication
-- Database access
+- Frontend to Backend communication
+- Backend to Database communication
 - Internal APIs
 - External web applications
-- Load balancing
-- Microservices communication
+- Microservices
+- Load balancing application traffic
 
 ---
 
@@ -206,41 +192,36 @@ kubectl expose deployment nginx \
 - Stable IP address
 - Built-in load balancing
 - Automatic service discovery
-- Decouples Pods from clients
-- Simplifies networking
-- Automatically updates endpoints
+- Decouples applications from Pods
+- Supports scaling
 
 ---
 
 ## Limitations
 
-- Does not perform Layer 7 routing
-- ClusterIP is accessible only inside the cluster
-- NodePort exposes a limited port range
-- LoadBalancer depends on cloud provider support
+- Incorrect selectors break routing
+- Service itself does not perform health checks
+- Pod IPs remain temporary
 
 ---
 
 ## Common Interview Questions (Concept Only)
 
-- What is a Kubernetes Service?
-- Why do Pods need Services?
-- How does a Service find Pods?
+- Why are Services required?
+- Why shouldn't applications use Pod IPs?
 - What are Endpoints?
-- What is kube-proxy's role?
-- Can a Service exist without Pods?
-- What happens if Pod IPs change?
-- Does a Service create Pods?
+- How does kube-proxy work?
+- How does a Service find Pods?
+- What is the difference between Service and Deployment?
 
 ---
 
 ## Common Mistakes
 
-- Using incorrect labels or selectors
-- Confusing Service IP with Pod IP
-- Assuming Services create Pods
-- Forgetting to expose application ports
-- Using NodePort in production unnecessarily
+- Using Pod IPs directly
+- Wrong Service selector
+- Wrong targetPort value
+- Assuming Service creates Pods
 
 ---
 
@@ -248,31 +229,28 @@ kubectl expose deployment nginx \
 
 | Problem | Cause | Solution |
 |----------|--------|----------|
-| Service has no endpoints | Selector mismatch | Verify Pod labels |
-| Cannot access Service | Wrong port | Check Service ports |
-| No traffic reaching Pods | Application not listening | Verify targetPort |
-| External access fails | Wrong Service type | Use LoadBalancer or Ingress |
-| DNS lookup fails | CoreDNS issue | Check DNS Pods |
+| Service has no endpoints | Label mismatch | Verify selectors |
+| Service unreachable | Wrong port | Check port and targetPort |
+| No traffic to Pods | Pods not Ready | Verify Pod health |
+| External access fails | Wrong Service type | Verify Service type |
 
 Useful Commands
 
 ```bash
 kubectl get svc
 
-kubectl describe svc <service-name>
-
 kubectl get endpoints
 
-kubectl get pods --show-labels
+kubectl describe svc nginx-service
 
-kubectl get events
+kubectl get pods --show-labels
 ```
 
 ---
 
 ## Summary
 
-A Kubernetes Service provides a stable network endpoint for accessing Pods. It uses labels and selectors to route traffic to healthy Pods, enabling reliable communication despite the dynamic nature of Pod IP addresses. Services are a core networking abstraction used in virtually every Kubernetes deployment.
+A Kubernetes Service provides a stable network endpoint, built-in load balancing, and automatic service discovery, allowing applications to communicate reliably without depending on changing Pod IP addresses.
 
 ---
 
@@ -282,22 +260,30 @@ A Kubernetes Service provides a stable network endpoint for accessing Pods. It u
 
 **ClusterIP** is the **default Service type** in Kubernetes.
 
-It exposes a Service using an **internal virtual IP** that is accessible **only within the Kubernetes cluster**.
+It exposes an application **only inside the Kubernetes cluster**.
 
-ClusterIP is primarily used for communication between microservices.
+Every ClusterIP Service receives:
+
+- A stable internal IP address
+- A DNS name
+- Automatic load balancing
+
+External clients **cannot access** a ClusterIP Service directly.
 
 > **Interview Tip**
 >
-> If the `type` field is omitted in a Service manifest, Kubernetes creates a **ClusterIP** Service by default.
+> If no Service type is specified, Kubernetes automatically creates a **ClusterIP** Service.
 
 ---
 
 ## Why It Is Used
 
-- Internal application communication
-- Backend APIs
+ClusterIP is used for:
+
+- Internal APIs
+- Backend services
 - Database access
-- Microservices networking
+- Microservices communication
 
 ---
 
@@ -305,12 +291,14 @@ ClusterIP is primarily used for communication between microservices.
 
 ```mermaid
 flowchart LR
+    Frontend[Frontend Pod]
+    Service[ClusterIP Service]
+    Backend1[Backend Pod 1]
+    Backend2[Backend Pod 2]
 
-FrontendPod
-
-FrontendPod --> ClusterIPService
-
-ClusterIPService --> BackendPods
+    Frontend --> Service
+    Service --> Backend1
+    Service --> Backend2
 ```
 
 ---
@@ -319,9 +307,10 @@ ClusterIPService --> BackendPods
 
 | Component | Purpose |
 |-----------|----------|
-| Cluster IP | Internal virtual IP |
-| Selector | Identifies Pods |
+| ClusterIP | Internal virtual IP |
+| Selector | Finds Pods |
 | Endpoints | Backend Pods |
+| kube-proxy | Routes traffic |
 
 ---
 
@@ -333,19 +322,16 @@ Default Service Type
 
 ## Lifecycle / Workflow
 
-Create Service
+```mermaid
+flowchart LR
+    A[Create Service]
+    B[Assign ClusterIP]
+    C[Match Pods]
+    D[Create Endpoints]
+    E[Route Internal Traffic]
 
-↓
-
-Assign Cluster IP
-
-↓
-
-Discover Matching Pods
-
-↓
-
-Route Internal Traffic
+    A --> B --> C --> D --> E
+```
 
 ---
 
@@ -370,54 +356,64 @@ kubectl describe svc
 
 ## Important Files (if applicable)
 
-service.yaml
+| File | Purpose |
+|------|---------|
+| service.yaml | ClusterIP Service |
 
 ---
 
 ## Real-World Use Cases
 
-- Frontend → Backend
-- Backend → Database
-- Internal APIs
+- Backend APIs
+- Internal databases
+- Redis
+- Internal microservices
 
 ---
 
 ## Advantages
 
 - Secure
-- Internal-only
+- Default Service type
+- Internal communication
 - Built-in load balancing
 
 ---
 
 ## Limitations
 
-- Not accessible outside the cluster
+- Cannot be accessed externally
 
 ---
 
 ## Common Interview Questions (Concept Only)
 
 - What is ClusterIP?
-- Is ClusterIP accessible externally?
+- Is ClusterIP externally accessible?
+- Why is ClusterIP the default Service type?
 
 ---
 
 ## Common Mistakes
 
 - Expecting external access
+- Using ClusterIP for public applications
 
 ---
 
 ## Troubleshooting
 
-Verify Service selectors and ClusterIP assignment.
+```bash
+kubectl get svc
+
+kubectl get endpoints
+```
 
 ---
 
 ## Summary
 
-ClusterIP is the default Kubernetes Service type used for internal communication between applications inside the cluster.
+ClusterIP exposes applications only inside the Kubernetes cluster and is the most commonly used Service type.
 
 ---
 
@@ -425,25 +421,28 @@ ClusterIP is the default Kubernetes Service type used for internal communication
 
 ## Overview
 
-A **NodePort** Service exposes an application on a static port (typically **30000–32767**) on every Worker Node.
+NodePort exposes an application through a **port on every Kubernetes Node**.
 
-Applications become accessible using:
+External clients access the application using:
 
 ```
-<Node-IP>:<NodePort>
+<NodeIP>:<NodePort>
 ```
 
-> **Interview Tip**
->
-> NodePort is commonly used for testing and small environments. In production, an **Ingress** or **LoadBalancer** is generally preferred.
+Default NodePort range:
+
+```
+30000–32767
+```
 
 ---
 
 ## Why It Is Used
 
-- External testing
-- Development clusters
-- Simple external access
+- Testing
+- Development
+- Small clusters
+- Learning Kubernetes
 
 ---
 
@@ -451,12 +450,14 @@ Applications become accessible using:
 
 ```mermaid
 flowchart LR
+    Client[External Client]
+    Node[Worker Node]
+    Service[NodePort Service]
+    Pod[Application Pod]
 
-Client
-
-Client --> NodeIP:NodePort
-
-NodePort --> Pods
+    Client --> Node
+    Node --> Service
+    Service --> Pod
 ```
 
 ---
@@ -465,33 +466,29 @@ NodePort --> Pods
 
 | Component | Purpose |
 |-----------|----------|
-| Node Port | External access |
-| ClusterIP | Internal routing |
-| Pods | Backend |
+| NodePort | External port |
+| ClusterIP | Internal IP |
+| kube-proxy | Traffic routing |
 
 ---
 
 ## Types (if applicable)
 
-NodePort
+NodePort Service
 
 ---
 
 ## Lifecycle / Workflow
 
-Create Service
+```mermaid
+flowchart LR
+    A[Create Service]
+    B[Assign ClusterIP]
+    C[Assign NodePort]
+    D[Access via Node IP]
 
-↓
-
-Assign NodePort
-
-↓
-
-Traffic Arrives at Node
-
-↓
-
-Forward to Pods
+    A --> B --> C --> D
+```
 
 ---
 
@@ -508,6 +505,8 @@ spec:
 
 ```bash
 kubectl get svc
+
+kubectl describe svc
 ```
 
 ---
@@ -522,48 +521,53 @@ service.yaml
 
 - Development
 - Testing
-- Home lab clusters
+- Lab environments
 
 ---
 
 ## Advantages
 
-- Simple
-- External access
-- Works on any Kubernetes cluster
+- Easy external access
+- No cloud provider required
 
 ---
 
 ## Limitations
 
 - Limited port range
-- No cloud load balancing
-- Exposes ports on every node
+- Not recommended for production
+- Requires Node IP
 
 ---
 
 ## Common Interview Questions (Concept Only)
 
 - What is NodePort?
-- What is the NodePort range?
+- Which ports does NodePort use?
+- Difference between ClusterIP and NodePort?
 
 ---
 
 ## Common Mistakes
 
-- Using NodePort for production internet-facing applications
+- Using NodePort in production
+- Firewall blocking NodePort
 
 ---
 
 ## Troubleshooting
 
-Verify firewall rules, node IP, and NodePort configuration.
+```bash
+kubectl get svc
+
+kubectl describe svc
+```
 
 ---
 
 ## Summary
 
-NodePort exposes a Service on every cluster node using a static port, making it suitable for development and testing environments.
+NodePort exposes applications using a port on every Kubernetes Node and is commonly used for development and testing.
 
 ---
 
@@ -571,23 +575,29 @@ NodePort exposes a Service on every cluster node using a static port, making it 
 
 ## Overview
 
-A **LoadBalancer** Service exposes an application externally by provisioning a cloud provider's load balancer.
+LoadBalancer exposes an application to the internet using a **cloud provider's load balancer**.
 
-It builds upon a NodePort Service and automatically configures an external IP.
+Supported on:
 
-Supported by managed Kubernetes platforms such as:
+- Azure AKS
+- AWS EKS
+- Google GKE
 
-- Azure Kubernetes Service (AKS)
-- Amazon Elastic Kubernetes Service (EKS)
-- Google Kubernetes Engine (GKE)
+The cloud provider automatically provisions:
+
+- Public IP
+- External Load Balancer
+- Traffic routing
 
 ---
 
 ## Why It Is Used
 
+LoadBalancer is used for:
+
 - Production applications
-- Public websites
-- External APIs
+- Public APIs
+- Websites
 - Internet-facing services
 
 ---
@@ -595,15 +605,17 @@ Supported by managed Kubernetes platforms such as:
 ## Architecture / Working
 
 ```mermaid
-flowchart LR
+flowchart TB
+    Client[Internet User]
+    LB[Cloud Load Balancer]
+    Service[LoadBalancer Service]
+    Pod1[Pod 1]
+    Pod2[Pod 2]
 
-Internet
-
-Internet --> CloudLoadBalancer
-
-CloudLoadBalancer --> NodePort
-
-NodePort --> Pods
+    Client --> LB
+    LB --> Service
+    Service --> Pod1
+    Service --> Pod2
 ```
 
 ---
@@ -612,33 +624,30 @@ NodePort --> Pods
 
 | Component | Purpose |
 |-----------|----------|
-| Cloud Load Balancer | External entry point |
-| NodePort | Intermediate routing |
-| Pods | Backend |
+| Cloud Load Balancer | Public access |
+| Public IP | External endpoint |
+| Service | Routes traffic |
+| Pods | Application |
 
 ---
 
 ## Types (if applicable)
 
-Cloud LoadBalancer
+Cloud Service
 
 ---
 
 ## Lifecycle / Workflow
 
-Create Service
+```mermaid
+flowchart LR
+    A[Create Service]
+    B[Cloud Creates Load Balancer]
+    C[Assign Public IP]
+    D[Route Requests]
 
-↓
-
-Cloud Load Balancer Provisioned
-
-↓
-
-External IP Assigned
-
-↓
-
-Traffic Routed to Pods
+    A --> B --> C --> D
+```
 
 ---
 
@@ -667,50 +676,56 @@ service.yaml
 
 ## Real-World Use Cases
 
-- Production websites
-- APIs
-- Enterprise applications
-- SaaS platforms
+- Production web applications
+- REST APIs
+- Internet-facing services
 
 ---
 
 ## Advantages
 
-- Automatic external IP
-- Cloud integration
-- Built-in load balancing
+- Public access
+- Cloud managed
+- Highly available
+- Easy configuration
 
 ---
 
 ## Limitations
 
-- Requires cloud provider support
-- May incur additional cloud costs
+- Requires cloud provider
+- May incur additional cost
 
 ---
 
 ## Common Interview Questions (Concept Only)
 
-- What is LoadBalancer?
-- Does LoadBalancer create NodePort automatically?
+- What is LoadBalancer Service?
+- Does LoadBalancer work on bare-metal clusters?
+- Difference between NodePort and LoadBalancer?
 
 ---
 
 ## Common Mistakes
 
-- Expecting LoadBalancer to work on local clusters without additional components
+- Expecting LoadBalancer on local clusters without additional components
+- Forgetting cloud provider requirements
 
 ---
 
 ## Troubleshooting
 
-Check external IP assignment, cloud controller status, and load balancer provisioning.
+```bash
+kubectl get svc
+```
+
+Check cloud provider resources if the external IP remains pending.
 
 ---
 
 ## Summary
 
-LoadBalancer Services expose applications to external users by provisioning a cloud-native load balancer that distributes traffic across backend Pods.
+LoadBalancer exposes applications externally by provisioning a cloud-managed load balancer with a public IP.
 
 ---
 
@@ -718,19 +733,20 @@ LoadBalancer Services expose applications to external users by provisioning a cl
 
 ## Overview
 
-An **ExternalName** Service maps a Kubernetes Service name to an external DNS name.
+ExternalName maps a Kubernetes Service to an **external DNS hostname** instead of Pods.
 
-Unlike other Service types, it **does not create a ClusterIP or proxy traffic**.
-
-Instead, Kubernetes returns a DNS CNAME record pointing to the external hostname.
+No proxying occurs. Kubernetes returns a DNS CNAME record pointing to the external service.
 
 ---
 
 ## Why It Is Used
 
+ExternalName is used to:
+
 - Access external databases
 - Connect to third-party APIs
-- Reference external services consistently
+- Integrate legacy systems
+- Simplify application configuration
 
 ---
 
@@ -738,14 +754,12 @@ Instead, Kubernetes returns a DNS CNAME record pointing to the external hostname
 
 ```mermaid
 flowchart LR
+    App[Application]
+    ExternalService[ExternalName Service]
+    DNS[External DNS]
 
-Application
-
-Application --> ExternalNameService
-
-ExternalNameService --> ExternalDNS
-
-ExternalDNS --> ExternalApplication
+    App --> ExternalService
+    ExternalService --> DNS
 ```
 
 ---
@@ -754,28 +768,30 @@ ExternalDNS --> ExternalApplication
 
 | Component | Purpose |
 |-----------|----------|
-| ExternalName | DNS alias |
+| ExternalName | Alias Service |
 | External DNS | Target hostname |
+| CoreDNS | Returns CNAME |
 
 ---
 
 ## Types (if applicable)
 
-ExternalName
+ExternalName Service
 
 ---
 
 ## Lifecycle / Workflow
 
-Create Service
+```mermaid
+flowchart LR
+    A[Create ExternalName Service]
+    B[Configure External DNS Name]
+    C[Application Queries Service]
+    D[CoreDNS Returns CNAME]
+    E[Application Connects to External Host]
 
-↓
-
-DNS Mapping Created
-
-↓
-
-Application Resolves External Host
+    A --> B --> C --> D --> E
+```
 
 ---
 
@@ -784,7 +800,6 @@ Application Resolves External Host
 ```yaml
 spec:
   type: ExternalName
-
   externalName: api.example.com
 ```
 
@@ -794,6 +809,8 @@ spec:
 
 ```bash
 kubectl get svc
+
+kubectl describe svc
 ```
 
 ---
@@ -808,48 +825,53 @@ service.yaml
 
 - External databases
 - SaaS integrations
-- Legacy systems
+- Legacy applications
 
 ---
 
 ## Advantages
 
-- Simple DNS mapping
-- No proxy required
-- Consistent service names
+- Simple configuration
+- No proxy overhead
+- Consistent DNS naming
 
 ---
 
 ## Limitations
 
-- DNS only
 - No load balancing
-- No health checks
+- Depends on external DNS availability
 
 ---
 
 ## Common Interview Questions (Concept Only)
 
 - What is ExternalName?
-- Does ExternalName create a ClusterIP?
+- Does ExternalName route traffic through Pods?
+- When should you use ExternalName?
 
 ---
 
 ## Common Mistakes
 
-- Expecting ExternalName to proxy network traffic
+- Expecting Pod selectors with ExternalName
+- Using it for internal applications
 
 ---
 
 ## Troubleshooting
 
-Verify DNS resolution and the configured external hostname.
+```bash
+kubectl describe svc
+
+kubectl exec -it <pod-name> -- nslookup <service-name>
+```
 
 ---
 
 ## Summary
 
-ExternalName Services provide a DNS alias to external services, allowing applications inside Kubernetes to use a consistent internal service name.
+ExternalName creates a DNS alias that allows Kubernetes applications to access external services using familiar Service names.
 
 ---
 
@@ -857,23 +879,39 @@ ExternalName Services provide a DNS alias to external services, allowing applica
 
 ## Overview
 
-**Service Discovery** is the mechanism that enables applications to automatically locate and communicate with Services without hardcoding IP addresses.
+Service Discovery allows applications to locate other applications automatically without knowing their IP addresses.
 
-Kubernetes provides built-in service discovery through:
+Kubernetes uses **CoreDNS** to provide DNS-based service discovery.
 
-- DNS
-- Environment variables
+Every Service automatically receives a DNS name.
 
-CoreDNS is the default DNS service used in modern Kubernetes clusters.
+Examples:
+
+```
+nginx
+
+nginx.default
+
+nginx.default.svc.cluster.local
+```
+
+Applications communicate using these names instead of IP addresses.
+
+> **Interview Tip**
+>
+> Service Discovery is one of the biggest advantages of Kubernetes. Since Pod IPs change frequently, DNS names remain the preferred and stable way for applications to communicate.
 
 ---
 
 ## Why It Is Used
 
+Service Discovery enables:
+
 - Automatic application discovery
-- Eliminate hardcoded IP addresses
-- Simplify microservices communication
-- Improve portability
+- Stable communication
+- Dynamic scaling
+- Microservices communication
+- Simplified configuration
 
 ---
 
@@ -881,14 +919,16 @@ CoreDNS is the default DNS service used in modern Kubernetes clusters.
 
 ```mermaid
 flowchart LR
+    App[Application]
+    DNS[CoreDNS]
+    Service[Service]
+    Endpoints[Endpoints]
+    Pod[Target Pod]
 
-Application
-
-Application --> DNS
-
-DNS --> Service
-
-Service --> Pods
+    App --> DNS
+    DNS --> Service
+    Service --> Endpoints
+    Endpoints --> Pod
 ```
 
 ---
@@ -897,64 +937,56 @@ Service --> Pods
 
 | Component | Purpose |
 |-----------|----------|
-| CoreDNS | DNS resolution |
+| CoreDNS | DNS Server |
 | Service | Stable endpoint |
-| ClusterIP | Internal IP |
+| Endpoints | Backend Pods |
+| kube-proxy | Routes traffic |
 
 ---
 
 ## Types (if applicable)
 
-| Method | Description |
-|---------|-------------|
-| DNS | Preferred approach |
-| Environment Variables | Legacy approach |
+Service Discovery Methods
+
+- DNS-based (most common)
+- Environment variables (legacy)
 
 ---
 
 ## Lifecycle / Workflow
 
-Service Created
+```mermaid
+flowchart LR
+    A[Create Service]
+    B[CoreDNS Creates DNS Record]
+    C[Application Resolves DNS]
+    D[Service Routes Request]
+    E[Traffic Reaches Pod]
 
-↓
-
-DNS Record Generated
-
-↓
-
-Application Queries DNS
-
-↓
-
-Traffic Routed to Pods
+    A --> B --> C --> D --> E
+```
 
 ---
 
 ## Configuration / Syntax (if applicable)
 
-Typical DNS format:
+Example FQDN
 
 ```
-<service-name>.<namespace>.svc.cluster.local
-```
-
-Example:
-
-```
-backend.default.svc.cluster.local
+service-name.namespace.svc.cluster.local
 ```
 
 ---
 
 ## Important Commands (if applicable)
 
-View Services
+Test DNS Resolution
 
 ```bash
-kubectl get svc
+kubectl exec -it <pod-name> -- nslookup kubernetes.default
 ```
 
-View CoreDNS
+View CoreDNS Pods
 
 ```bash
 kubectl get pods -n kube-system
@@ -964,50 +996,57 @@ kubectl get pods -n kube-system
 
 ## Important Files (if applicable)
 
-CoreDNS configuration (managed by the cluster)
+| File | Purpose |
+|------|---------|
+| service.yaml | Service definition |
+| coredns ConfigMap | DNS configuration |
 
 ---
 
 ## Real-World Use Cases
 
-- Frontend → Backend
-- API communication
-- Database access
+- Frontend to Backend communication
+- Backend to Database connectivity
+- Internal APIs
 - Microservices architectures
+- Service-to-Service communication
 
 ---
 
 ## Advantages
 
-- Automatic discovery
-- Stable service names
-- Eliminates hardcoded addresses
-- Supports scalable architectures
+- Automatic service discovery
+- Stable DNS names
+- No hardcoded IP addresses
+- Supports dynamic scaling
+- Simplifies application configuration
 
 ---
 
 ## Limitations
 
-- Depends on healthy cluster DNS
-- DNS issues can impact application communication
+- Depends on CoreDNS availability
+- DNS failures impact application communication
+- Environment variable discovery is limited to Services that exist when the Pod starts
 
 ---
 
 ## Common Interview Questions (Concept Only)
 
 - What is Service Discovery?
-- How does Kubernetes implement Service Discovery?
-- What is CoreDNS?
-- What is the default DNS format for a Service?
-- Which method is preferred: DNS or environment variables?
+- How does CoreDNS work?
+- What is the default Kubernetes DNS domain?
+- Can applications communicate without knowing Pod IPs?
+- DNS vs Environment Variable Service Discovery?
 
 ---
 
 ## Common Mistakes
 
-- Hardcoding Pod IP addresses
-- Assuming DNS records exist before the Service is created
-- Ignoring CoreDNS health during troubleshooting
+- Hardcoding Pod IPs
+- Assuming Service Discovery works without DNS
+- Ignoring CoreDNS health
+- Using environment variables for dynamic discovery
 
 ---
 
@@ -1015,10 +1054,10 @@ CoreDNS configuration (managed by the cluster)
 
 | Problem | Cause | Solution |
 |----------|--------|----------|
-| DNS resolution fails | CoreDNS issue | Verify CoreDNS Pods |
-| Service name not found | Service missing | Check Service creation |
-| Application cannot connect | Incorrect namespace | Verify fully qualified DNS name |
-| No backend endpoints | Selector mismatch | Check labels and endpoints |
+| Service name not resolving | CoreDNS issue | Check CoreDNS Pods |
+| DNS lookup fails | DNS configuration | Verify CoreDNS ConfigMap |
+| Service unreachable | Selector mismatch | Check Endpoints |
+| No backend Pods | Pods not Ready | Verify Pod status |
 
 Useful Commands
 
@@ -1029,11 +1068,11 @@ kubectl get endpoints
 
 kubectl get pods -n kube-system
 
-kubectl describe svc <service-name>
+kubectl exec -it <pod-name> -- nslookup kubernetes.default
 ```
 
 ---
 
 ## Summary
 
-Service Discovery allows Kubernetes applications to locate Services dynamically using DNS or environment variables. CoreDNS automatically creates DNS records for Services, enabling reliable communication between microservices without relying on changing Pod IP addresses.
+Service Discovery enables Kubernetes applications to locate and communicate with each other using stable DNS names instead of changing Pod IP addresses. CoreDNS automatically manages these DNS records, making Service Discovery a fundamental capability for scalable, resilient microservices.
