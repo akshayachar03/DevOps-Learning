@@ -2,34 +2,34 @@
 
 ## Overview
 
-Production Deployments in Helm involve deploying Kubernetes applications safely, consistently, and with minimal downtime. Helm simplifies production deployments through versioned releases, environment-specific configurations, automated upgrades, and rollback capabilities.
+Production deployments with Helm focus on delivering applications to Kubernetes in a **safe, repeatable, and reliable** manner. Helm simplifies deployment management by using reusable charts, environment-specific configurations, release versioning, and rollback capabilities.
 
-A production-ready Helm deployment should ensure:
+A production deployment should ensure:
 
 - High availability
-- Repeatable deployments
-- Configuration consistency
-- Safe upgrades
-- Quick recovery from failures
 - Minimal downtime
+- Easy rollback
+- Consistent configuration
+- Version-controlled releases
+- Automated deployment through CI/CD or GitOps
 
 > **Interview Tip**
 >
-> Helm itself is **not a deployment strategy**. It provides the tools to implement strategies such as Rolling Updates, Blue-Green, and Canary deployments using Kubernetes resources.
+> Production deployments should always be **automated, repeatable, and version-controlled**.
 
 ---
 
 ## Why It Is Used
 
-Production deployments help to:
+Production deployment practices help organizations:
 
-- Deploy applications safely
 - Reduce deployment failures
 - Maintain application availability
-- Support multiple environments
-- Automate upgrades
-- Simplify rollbacks
-- Improve release reliability
+- Simplify upgrades
+- Standardize deployments
+- Support disaster recovery
+- Enable quick rollbacks
+- Improve release confidence
 
 ---
 
@@ -38,37 +38,14 @@ Production deployments help to:
 ```mermaid
 flowchart LR
 
-Developer
-      │
-      ▼
-Git Repository
-      │
-      ▼
-CI/CD Pipeline
-      │
-      ▼
-Helm Chart
-      │
-      ▼
-Environment Values
-      │
-      ▼
-Kubernetes Cluster
-      │
-      ▼
-Application Release
+A[Developer]
+A --> B[Git Repository]
+B --> C[CI/CD or GitOps]
+C --> D[Helm Chart]
+D --> E[Environment Values]
+E --> F[Kubernetes Cluster]
+F --> G[Production Application]
 ```
-
-### Working Process
-
-1. Application code is committed.
-2. CI pipeline builds and tests the application.
-3. Docker image is pushed.
-4. Helm Chart is updated.
-5. Environment-specific values are applied.
-6. Helm upgrades the release.
-7. Kubernetes performs a rolling update.
-8. If deployment fails, Helm rolls back.
 
 ---
 
@@ -76,22 +53,23 @@ Application Release
 
 | Component | Purpose |
 |-----------|----------|
-| Helm Chart | Packages application |
-| Release | Running deployment |
-| Values Files | Environment configuration |
-| Kubernetes Deployment | Rolling updates |
-| Docker Image | Application artifact |
-| Release History | Rollback support |
+| Helm Chart | Application package |
+| values.yaml | Default configuration |
+| Environment Values | Environment-specific configuration |
+| Kubernetes Cluster | Production runtime |
+| CI/CD Pipeline | Automated deployment |
+| Git Repository | Source of truth |
+| Release History | Deployment tracking |
 
 ---
 
 ## Types (if applicable)
 
-| Deployment Type | Purpose |
-|-----------------|----------|
-| Development | Testing features |
-| Staging | Pre-production validation |
-| Production | Live environment |
+| Deployment Type | Description |
+|-----------------|-------------|
+| Development | Testing new features |
+| Staging | Production-like validation |
+| Production | Live application deployment |
 
 ---
 
@@ -100,51 +78,35 @@ Application Release
 ```mermaid
 flowchart LR
 
-Develop
-      │
-      ▼
-Build
-      │
-      ▼
-Test
-      │
-      ▼
-Package
-      │
-      ▼
-Deploy
-      │
-      ▼
-Upgrade
-      │
-      ▼
-Monitor
-      │
-      ▼
-Rollback (If Needed)
+A[Code Commit]
+A --> B[Build]
+B --> C[Test]
+C --> D[Build Image]
+D --> E[Push Image]
+E --> F[Update Helm Values]
+F --> G[Deploy to Production]
+G --> H[Health Check]
+H --> I[Monitor]
 ```
 
 ---
 
 ## Configuration / Syntax (if applicable)
 
-Deploy
-
-```bash
-helm upgrade --install myapp ./chart
-```
-
-Production values
+Deploy using production values:
 
 ```bash
 helm upgrade --install myapp ./chart \
 -f values-prod.yaml
 ```
 
-Dry run
+Preview deployment:
 
 ```bash
-helm upgrade --dry-run
+helm upgrade --install myapp ./chart \
+-f values-prod.yaml \
+--dry-run \
+--debug
 ```
 
 ---
@@ -161,8 +123,6 @@ helm rollback
 helm history
 
 helm status
-
-helm get values
 
 helm lint
 
@@ -195,58 +155,54 @@ Chart.lock
 
 ## Real-World Use Cases
 
-- Production Kubernetes deployments
-- Enterprise application releases
+- Enterprise Kubernetes deployments
 - Multi-environment deployments
-- Zero-downtime upgrades
-- Automated rollback
-- CI/CD pipelines
+- SaaS applications
+- Banking applications
+- E-commerce platforms
+- Production AKS/EKS/GKE deployments
 
 ---
 
 ## Advantages
 
-- Repeatable deployments
+- Consistent deployments
 - Easy rollback
 - Version-controlled releases
-- Environment isolation
-- Supports CI/CD automation
-- Reduces deployment risk
+- Environment-specific configuration
+- Supports automation
+- Simplifies upgrades
 
 ---
 
 ## Limitations
 
+- Incorrect values can impact production
+- Helm cannot detect application-level issues
 - Requires Kubernetes knowledge
-- Incorrect values can affect production
-- Helm cannot prevent application bugs
-- Poor chart design affects deployment quality
+- Configuration management becomes complex for large applications
 
 ---
 
 ## Common Interview Questions (Concept Only)
 
-- Why use Helm in production?
-- How are production deployments managed?
-- What is `helm upgrade --install`?
-- How do you perform production rollbacks?
-- Why separate environment values?
-- How does Helm support zero downtime?
-- How is release history maintained?
-- Difference between chart version and application version?
-- Which deployment strategy is most common?
-- How do you validate a production deployment?
+- Why is Helm suitable for production deployments?
+- What makes a deployment production-ready?
+- How do you deploy to multiple environments?
+- Why should production deployments be automated?
+- What is the role of values files?
+- How do you validate a Helm deployment before production?
 
 ---
 
 ## Common Mistakes
 
-- Using `latest` Docker images
-- Hardcoding production values
-- Deploying without testing
-- Skipping rollback planning
-- Using identical values for all environments
+- Deploying directly without testing
+- Using the `latest` image tag
+- Hardcoding production configuration
+- Skipping `helm lint`
 - Ignoring release history
+- Not testing rollback
 
 ---
 
@@ -255,25 +211,16 @@ Chart.lock
 | Problem | Cause | Solution |
 |----------|-------|----------|
 | Deployment failed | Invalid chart | Run `helm lint` |
-| Wrong configuration | Incorrect values file | Validate environment values |
-| Application unavailable | Failed rollout | Check Deployment events |
-| Rollback unavailable | Missing history | Use `helm history` |
-| Incorrect image | Wrong tag | Verify image version |
-| Upgrade stuck | Kubernetes issue | Inspect Pods and Events |
+| Application unavailable | Wrong configuration | Verify values files |
+| Upgrade failed | Invalid manifests | Run `helm template` |
+| Rollback failed | Missing release history | Check `helm history` |
+| Pods failing | Application issue | Inspect pod logs and events |
 
 ---
 
 ## Summary
 
-Production deployments with Helm provide reliable, version-controlled, automated Kubernetes application management through configuration management, environment isolation, rolling upgrades, and rollback capabilities.
-
-> **Interview Tip**
->
-> A typical production deployment command is:
-
-```bash
-helm upgrade --install myapp ./chart -f values-prod.yaml
-```
+Production deployments with Helm provide reliable, automated, and version-controlled application releases while supporting upgrades, rollbacks, and environment-specific configurations.
 
 ---
 
@@ -281,25 +228,23 @@ helm upgrade --install myapp ./chart -f values-prod.yaml
 
 ## Overview
 
-Environment-specific values allow the same Helm Chart to be deployed across different environments using different configuration files.
+Different environments require different configurations. Helm supports this using **multiple values files**, allowing the same chart to be deployed with environment-specific settings.
 
-Typical environments include:
+Typical environments:
 
 - Development
 - Testing
 - Staging
 - Production
 
-Instead of modifying templates, configuration differences are stored in separate values files.
-
 ---
 
 ## Why It Is Used
 
-- Separate configurations
-- Reuse the same chart
-- Environment isolation
-- Easier maintenance
+- Avoid duplicate charts
+- Customize deployments
+- Separate environment configuration
+- Improve maintainability
 
 ---
 
@@ -308,34 +253,36 @@ Instead of modifying templates, configuration differences are stored in separate
 ```mermaid
 flowchart LR
 
-Helm Chart
-      │
-      ├── values-dev.yaml
-      ├── values-stage.yaml
-      └── values-prod.yaml
-              │
-              ▼
-      Kubernetes Cluster
+A[Helm Chart]
+A --> B[values-dev.yaml]
+A --> C[values-stage.yaml]
+A --> D[values-prod.yaml]
+
+B --> E[Development]
+C --> F[Staging]
+D --> G[Production]
 ```
 
 ---
 
 ## Key Components
 
-- values.yaml
-- values-dev.yaml
-- values-stage.yaml
-- values-prod.yaml
+| Component | Purpose |
+|-----------|----------|
+| values.yaml | Default values |
+| values-dev.yaml | Development configuration |
+| values-stage.yaml | Staging configuration |
+| values-prod.yaml | Production configuration |
 
 ---
 
 ## Types (if applicable)
 
-| Environment | Purpose |
-|-------------|----------|
-| Development | Feature testing |
-| Staging | Production validation |
-| Production | Live application |
+| File | Environment |
+|------|-------------|
+| values-dev.yaml | Development |
+| values-stage.yaml | Staging |
+| values-prod.yaml | Production |
 
 ---
 
@@ -344,7 +291,10 @@ Helm Chart
 ```mermaid
 flowchart LR
 
-Chart --> Select Values File --> Deploy
+A[Select Environment]
+A --> B[Load Values File]
+B --> C[Render Templates]
+C --> D[Deploy]
 ```
 
 ---
@@ -352,7 +302,7 @@ Chart --> Select Values File --> Deploy
 ## Configuration / Syntax (if applicable)
 
 ```bash
-helm upgrade \
+helm upgrade --install myapp ./chart \
 -f values-prod.yaml
 ```
 
@@ -385,45 +335,49 @@ values-prod.yaml
 ## Real-World Use Cases
 
 - Different replica counts
-- Environment URLs
-- Database endpoints
+- Different database endpoints
+- Different resource limits
+- Different image tags
 
 ---
 
 ## Advantages
 
 - Reusable charts
-- Cleaner configuration
+- Easy configuration management
+- Environment isolation
 
 ---
 
 ## Limitations
 
-- Multiple files to manage
+- Multiple values files require maintenance
 
 ---
 
 ## Common Interview Questions (Concept Only)
 
 - Why use multiple values files?
+- Which values file overrides another?
 
 ---
 
 ## Common Mistakes
 
-- Editing templates for each environment
+- Editing the wrong environment file
+- Duplicating configuration
 
 ---
 
 ## Troubleshooting
 
-Verify selected values file.
+Verify the correct values file is supplied during deployment.
 
 ---
 
 ## Summary
 
-Environment-specific values enable reusable Helm Charts across multiple environments.
+Environment-specific values allow one Helm chart to support multiple deployment environments.
 
 ---
 
@@ -431,15 +385,18 @@ Environment-specific values enable reusable Helm Charts across multiple environm
 
 ## Overview
 
-Configuration Management in Helm separates application configuration from application templates using values files.
+Configuration management separates application configuration from application code.
+
+Helm manages configuration using values files and templates.
 
 ---
 
 ## Why It Is Used
 
-- Flexible deployments
-- Easier maintenance
+- Centralized configuration
+- Easy updates
 - Environment customization
+- Better maintainability
 
 ---
 
@@ -448,21 +405,29 @@ Configuration Management in Helm separates application configuration from applic
 ```mermaid
 flowchart LR
 
-Values --> Templates --> Kubernetes
+A[Values Files]
+A --> B[Helm Templates]
+B --> C[Rendered YAML]
+C --> D[Kubernetes]
 ```
 
 ---
 
 ## Key Components
 
-- Values
-- Templates
+| Component | Purpose |
+|-----------|----------|
+| values.yaml | Configuration |
+| Templates | Resource generation |
+| ConfigMaps | Non-sensitive configuration |
+| Secrets | Sensitive configuration |
 
 ---
 
 ## Types (if applicable)
 
-Declarative configuration
+- Static configuration
+- Dynamic configuration
 
 ---
 
@@ -471,23 +436,25 @@ Declarative configuration
 ```mermaid
 flowchart LR
 
-Update Values --> Deploy
+A[Update Values]
+A --> B[Render Templates]
+B --> C[Deploy]
 ```
 
 ---
 
 ## Configuration / Syntax (if applicable)
 
-```yaml
-replicaCount: 3
-```
+Configuration values are referenced in templates.
 
 ---
 
 ## Important Commands (if applicable)
 
 ```bash
-helm get values
+helm template
+
+helm upgrade
 ```
 
 ---
@@ -496,33 +463,37 @@ helm get values
 
 ```
 values.yaml
+
+templates/
 ```
 
 ---
 
 ## Real-World Use Cases
 
-- Image tags
+- Database configuration
 - Resource limits
-- Hostnames
+- Feature flags
 
 ---
 
 ## Advantages
 
-- Configuration reuse
+- Centralized configuration
+- Easy maintenance
 
 ---
 
 ## Limitations
 
-- Incorrect values cause deployment failures
+- Complex applications require many values
 
 ---
 
 ## Common Interview Questions (Concept Only)
 
-- What is values.yaml?
+- How does Helm manage configuration?
+- Why separate configuration from code?
 
 ---
 
@@ -534,13 +505,13 @@ values.yaml
 
 ## Troubleshooting
 
-Validate rendered manifests.
+Validate rendered manifests before deployment.
 
 ---
 
 ## Summary
 
-Configuration Management separates deployment configuration from application templates.
+Helm simplifies configuration management through reusable templates and values files.
 
 ---
 
@@ -548,20 +519,19 @@ Configuration Management separates deployment configuration from application tem
 
 ## Overview
 
-Application Versioning tracks the version of the deployed application independently from the Helm Chart version.
+Application versioning tracks both the Helm chart version and the application version.
 
-Helm maintains two different versions:
-
-- Chart Version
-- Application Version
+> **Interview Tip**
+>
+> Helm tracks **Chart Version** and **Application Version** separately.
 
 ---
 
 ## Why It Is Used
 
-- Track releases
-- Upgrade applications
-- Maintain release history
+- Trace releases
+- Rollback easily
+- Maintain compatibility
 
 ---
 
@@ -570,25 +540,28 @@ Helm maintains two different versions:
 ```mermaid
 flowchart LR
 
-Application --> appVersion
+A[Chart Version]
+A --> C[Helm Release]
 
-Chart --> version
+B[Application Version]
+B --> C
 ```
 
 ---
 
 ## Key Components
 
-| Field | Purpose |
-|---------|----------|
-| version | Helm Chart version |
+| Component | Purpose |
+|-----------|----------|
+| version | Helm chart version |
 | appVersion | Application version |
 
 ---
 
 ## Types (if applicable)
 
-Semantic Versioning
+- Chart Version
+- Application Version
 
 ---
 
@@ -597,17 +570,19 @@ Semantic Versioning
 ```mermaid
 flowchart LR
 
-Build --> Tag --> Deploy
+A[New Application]
+A --> B[Update appVersion]
+B --> C[Package Chart]
 ```
 
 ---
 
 ## Configuration / Syntax (if applicable)
 
-```yaml
-version: 2.1.0
+Defined in:
 
-appVersion: "5.3.1"
+```
+Chart.yaml
 ```
 
 ---
@@ -615,7 +590,9 @@ appVersion: "5.3.1"
 ## Important Commands (if applicable)
 
 ```bash
-helm show chart
+helm package
+
+helm history
 ```
 
 ---
@@ -630,25 +607,28 @@ Chart.yaml
 
 ## Real-World Use Cases
 
-- Release tracking
+- Production releases
+- Release auditing
 
 ---
 
 ## Advantages
 
-- Clear version management
+- Easy tracking
+- Better rollback
 
 ---
 
 ## Limitations
 
-- Requires manual updates
+- Requires version discipline
 
 ---
 
 ## Common Interview Questions (Concept Only)
 
 - Difference between version and appVersion?
+- Why maintain chart versions?
 
 ---
 
@@ -660,13 +640,13 @@ Chart.yaml
 
 ## Troubleshooting
 
-Review Chart.yaml.
+Verify release history.
 
 ---
 
 ## Summary
 
-Application Versioning separates application releases from chart releases.
+Helm separates application and chart versions for better release management.
 
 ---
 
@@ -674,9 +654,15 @@ Application Versioning separates application releases from chart releases.
 
 ## Overview
 
-Release Strategies define how new application versions are introduced into production while minimizing downtime and risk.
+Release strategies define how application updates are delivered with minimal risk.
 
-Helm works with Kubernetes deployment strategies.
+Common strategies include:
+
+- Rolling Update
+- Blue-Green Deployment
+- Canary Deployment
+
+Helm supports these strategies through Kubernetes manifests.
 
 ---
 
@@ -684,7 +670,7 @@ Helm works with Kubernetes deployment strategies.
 
 - Reduce deployment risk
 - Improve availability
-- Support gradual rollouts
+- Enable safer upgrades
 
 ---
 
@@ -693,7 +679,9 @@ Helm works with Kubernetes deployment strategies.
 ```mermaid
 flowchart LR
 
-Old Version --> Rolling Update --> New Version
+A[New Release]
+A --> B[Deployment Strategy]
+B --> C[Production]
 ```
 
 ---
@@ -701,19 +689,19 @@ Old Version --> Rolling Update --> New Version
 ## Key Components
 
 - Deployment
-- ReplicaSet
-- Pods
+- Service
+- Helm
+- Kubernetes
 
 ---
 
 ## Types (if applicable)
 
 | Strategy | Description |
-|-----------|-------------|
-| Rolling Update | Replace Pods gradually |
+|----------|-------------|
+| Rolling Update | Replace pods gradually |
 | Blue-Green | Two production environments |
-| Canary | Small percentage rollout |
-| Recreate | Stop old before new |
+| Canary | Deploy to small percentage of users |
 
 ---
 
@@ -722,14 +710,16 @@ Old Version --> Rolling Update --> New Version
 ```mermaid
 flowchart LR
 
-Deploy --> Monitor --> Complete
+A[Deploy New Version]
+A --> B[Monitor]
+B --> C[Complete Rollout]
 ```
 
 ---
 
 ## Configuration / Syntax (if applicable)
 
-Deployment strategy is configured in Kubernetes manifests.
+Configured in Kubernetes Deployment resources.
 
 ---
 
@@ -744,50 +734,53 @@ helm upgrade
 ## Important Files (if applicable)
 
 ```
-deployment.yaml
+templates/deployment.yaml
 ```
 
 ---
 
 ## Real-World Use Cases
 
-- Production upgrades
+- Zero-downtime upgrades
+- Enterprise releases
 
 ---
 
 ## Advantages
 
 - Reduced downtime
+- Safer deployments
 
 ---
 
 ## Limitations
 
-- Some strategies require additional infrastructure
+- Requires Kubernetes support
 
 ---
 
 ## Common Interview Questions (Concept Only)
 
-- Which deployment strategy is default?
+- What is a rolling update?
+- Difference between Blue-Green and Canary?
 
 ---
 
 ## Common Mistakes
 
-- Choosing incorrect strategy
+- Large production updates without testing
 
 ---
 
 ## Troubleshooting
 
-Inspect Deployment rollout.
+Monitor rollout status and pod health.
 
 ---
 
 ## Summary
 
-Helm supports Kubernetes deployment strategies for safer releases.
+Helm supports modern Kubernetes deployment strategies through declarative manifests.
 
 ---
 
@@ -795,16 +788,17 @@ Helm supports Kubernetes deployment strategies for safer releases.
 
 ## Overview
 
-Rollback Strategy restores a previous working release if an upgrade fails.
+Rollback restores a previous working release when a deployment fails.
 
-Helm maintains release history, making rollbacks straightforward.
+Helm maintains release history, enabling quick recovery.
 
 ---
 
 ## Why It Is Used
 
-- Recover failed deployments
-- Minimize downtime
+- Recover from failed deployments
+- Reduce downtime
+- Improve reliability
 
 ---
 
@@ -813,21 +807,26 @@ Helm maintains release history, making rollbacks straightforward.
 ```mermaid
 flowchart LR
 
-Revision3 --> Rollback --> Revision2
+A[Failed Release]
+A --> B[Helm History]
+B --> C[Rollback]
+C --> D[Previous Stable Release]
 ```
 
 ---
 
 ## Key Components
 
-- Revision
-- Release History
+- Release history
+- Rollback command
+- Kubernetes resources
 
 ---
 
 ## Types (if applicable)
 
-Automatic or manual rollback
+- Manual rollback
+- Automated rollback
 
 ---
 
@@ -836,7 +835,10 @@ Automatic or manual rollback
 ```mermaid
 flowchart LR
 
-Upgrade --> Failure --> Rollback
+A[Upgrade]
+A --> B[Failure]
+B --> C[Rollback]
+C --> D[Stable Version]
 ```
 
 ---
@@ -855,55 +857,60 @@ helm rollback myapp 2
 helm rollback
 
 helm history
+
+helm status
 ```
 
 ---
 
 ## Important Files (if applicable)
 
-Release metadata
+No dedicated files.
 
 ---
 
 ## Real-World Use Cases
 
-- Production recovery
+- Failed upgrades
+- Emergency recovery
 
 ---
 
 ## Advantages
 
 - Fast recovery
+- Minimal downtime
 
 ---
 
 ## Limitations
 
-- Cannot fix application bugs automatically
+- Previous release must exist
 
 ---
 
 ## Common Interview Questions (Concept Only)
 
 - How does Helm rollback work?
+- Where is release history stored?
 
 ---
 
 ## Common Mistakes
 
-- Rolling back incorrect revision
+- Not testing rollback
 
 ---
 
 ## Troubleshooting
 
-Check release history.
+Check release history before rollback.
 
 ---
 
 ## Summary
 
-Rollback quickly restores previous stable releases.
+Rollback is one of Helm's most valuable production features for recovering from failed deployments.
 
 ---
 
@@ -911,16 +918,17 @@ Rollback quickly restores previous stable releases.
 
 ## Overview
 
-Zero-Downtime Upgrades update applications while keeping them available to users.
+Zero-downtime upgrades allow applications to be updated without interrupting user access.
 
-Helm relies on Kubernetes Rolling Updates to achieve this.
+Helm relies on Kubernetes rolling updates to achieve this.
 
 ---
 
 ## Why It Is Used
 
-- Maintain application availability
-- Avoid service interruption
+- Maintain availability
+- Improve user experience
+- Continuous deployment
 
 ---
 
@@ -929,22 +937,28 @@ Helm relies on Kubernetes Rolling Updates to achieve this.
 ```mermaid
 flowchart LR
 
-Old Pods --> New Pods --> Remove Old Pods
+A[Current Pods]
+A --> B[New Pods Created]
+B --> C[Traffic Shift]
+C --> D[Old Pods Removed]
 ```
 
 ---
 
 ## Key Components
 
-- Rolling Update
+- Deployment
 - Readiness Probe
-- ReplicaSet
+- Liveness Probe
+- Rolling Update
 
 ---
 
 ## Types (if applicable)
 
-Rolling Update
+- Rolling Update
+- Blue-Green
+- Canary
 
 ---
 
@@ -953,14 +967,18 @@ Rolling Update
 ```mermaid
 flowchart LR
 
-New Pod Ready --> Remove Old Pod
+A[Deploy New Version]
+A --> B[Start New Pods]
+B --> C[Health Check]
+C --> D[Switch Traffic]
+D --> E[Remove Old Pods]
 ```
 
 ---
 
 ## Configuration / Syntax (if applicable)
 
-Helm upgrades Kubernetes Deployments that use RollingUpdate strategy.
+Configured within the Kubernetes Deployment manifest.
 
 ---
 
@@ -968,6 +986,8 @@ Helm upgrades Kubernetes Deployments that use RollingUpdate strategy.
 
 ```bash
 helm upgrade
+
+kubectl rollout status
 ```
 
 ---
@@ -975,55 +995,64 @@ helm upgrade
 ## Important Files (if applicable)
 
 ```
-deployment.yaml
+templates/deployment.yaml
 ```
 
 ---
 
 ## Real-World Use Cases
 
-- SaaS applications
-- Enterprise services
+- Banking applications
+- SaaS platforms
+- E-commerce systems
 
 ---
 
 ## Advantages
 
-- High availability
-- Minimal downtime
+- No service interruption
+- Improved reliability
+- Better customer experience
 
 ---
 
 ## Limitations
 
 - Requires multiple replicas
-- Poor readiness probes can still cause downtime
+- Application must support rolling updates
 
 ---
 
 ## Common Interview Questions (Concept Only)
 
-- How does Helm achieve zero downtime?
-- Does Helm perform rolling updates?
+- How does Helm achieve zero-downtime upgrades?
+- What Kubernetes features enable rolling updates?
+- Why are readiness probes important?
 
 ---
 
 ## Common Mistakes
 
-- Deploying with one replica
+- Single replica deployments
 - Missing readiness probes
+- Using mutable image tags
 
 ---
 
 ## Troubleshooting
 
-Verify Deployment rollout status and readiness probes.
+| Problem | Cause | Solution |
+|----------|-------|----------|
+| Downtime during upgrade | Single replica | Increase replica count |
+| Traffic sent to unhealthy pods | Missing readiness probe | Configure readiness probe |
+| Upgrade stalls | Failed pod startup | Check pod logs and rollout status |
+| Old pods not terminated | Rolling update configuration | Verify Deployment strategy |
 
 ---
 
 ## Summary
 
-Zero-downtime upgrades are achieved by combining Helm upgrades with Kubernetes RollingUpdate deployments and properly configured readiness and liveness probes.
+Zero-downtime upgrades are achieved by combining Helm with Kubernetes rolling update strategies, readiness probes, and multiple application replicas.
 
 ---
 
@@ -1031,90 +1060,70 @@ Zero-downtime upgrades are achieved by combining Helm upgrades with Kubernetes R
 
 ## Production Deployment Workflow
 
-```text
-Developer Commit
-        ↓
-CI/CD Pipeline
-        ↓
-Build Docker Image
-        ↓
-Push Image
-        ↓
-helm lint
-        ↓
-helm template
-        ↓
-helm upgrade --install
-        ↓
-Rolling Update
-        ↓
-Monitor Health
-        ↓
-Rollback (If Required)
+```mermaid
+flowchart LR
+
+A[Developer]
+A --> B[Git Repository]
+B --> C[CI/CD or GitOps]
+C --> D[Helm Upgrade]
+D --> E[Kubernetes Cluster]
+E --> F[Production]
 ```
 
 ---
 
 ## Environment Values
 
-| File | Purpose |
-|------|---------|
-| `values.yaml` | Default configuration |
-| `values-dev.yaml` | Development |
-| `values-stage.yaml` | Staging |
-| `values-prod.yaml` | Production |
+```mermaid
+flowchart LR
+
+A[Helm Chart]
+A --> B[values-dev.yaml]
+A --> C[values-stage.yaml]
+A --> D[values-prod.yaml]
+```
 
 ---
 
-## Chart Version vs Application Version
+## Rollback Workflow
 
-| Chart Version | Application Version |
-|---------------|---------------------|
-| Helm package version | Deployed application version |
-| `version` field | `appVersion` field |
-| Used by Helm for chart lifecycle | Informational metadata |
+```mermaid
+flowchart LR
 
----
-
-## Common Release Strategies
-
-| Strategy | Downtime | Use Case |
-|----------|----------|----------|
-| Rolling Update | Minimal | Default Kubernetes deployment |
-| Blue-Green | None (with traffic switch) | Critical production releases |
-| Canary | Minimal | Gradual rollout and testing |
-| Recreate | Yes | Applications that cannot run multiple versions simultaneously |
+A[Failed Upgrade]
+A --> B[Helm History]
+B --> C[Rollback]
+C --> D[Previous Stable Release]
+```
 
 ---
 
-## Frequently Used Production Commands
+## Release Strategy Comparison
 
-| Command | Purpose |
-|----------|---------|
-| `helm upgrade --install` | Install or upgrade release |
-| `helm rollback` | Restore previous revision |
-| `helm history` | View release revisions |
-| `helm status` | Check deployment status |
-| `helm get values` | Display active configuration |
-| `helm lint` | Validate chart |
-| `helm template` | Render manifests locally |
-| `helm test` | Execute post-deployment tests |
+| Strategy | Downtime | Risk | Common Usage |
+|----------|----------|------|--------------|
+| Rolling Update | None | Low | Default Kubernetes deployment |
+| Blue-Green | Minimal | Very Low | Critical production applications |
+| Canary | None | Very Low | Progressive releases |
 
 ---
 
 ## Production Best Practices
 
-- Use separate values files for each environment (development, staging, production).
-- Always validate charts with `helm lint` and `helm template` before deploying.
-- Use immutable Docker image tags instead of `latest`.
-- Maintain separate chart and application versions in `Chart.yaml`.
-- Use `helm upgrade --install` for idempotent deployments.
-- Configure Kubernetes readiness and liveness probes to support zero-downtime upgrades.
-- Keep at least two replicas in production to enable rolling updates without service interruption.
-- Monitor deployment health after upgrades and maintain rollback procedures using `helm history` and `helm rollback`.
+- Use separate values files for each environment.
+- Never use the `latest` image tag in production.
+- Validate charts with `helm lint` before deployment.
+- Preview manifests using `helm template` or `--dry-run`.
+- Store configuration separately from application code.
+- Maintain chart and application versions independently.
+- Test rollback procedures regularly.
+- Use readiness and liveness probes for safe upgrades.
+- Deploy through CI/CD or GitOps instead of manually.
+- Monitor deployment health after every release.
 
 ---
 
 ## One-line Interview Answer
 
-**Helm enables production-ready Kubernetes deployments by combining environment-specific configuration, version-controlled releases, automated upgrades, Kubernetes deployment strategies, and built-in rollback capabilities to deliver reliable, repeatable, and minimal-downtime application releases.**
+**Production deployments with Helm use version-controlled charts, environment-specific values, automated CI/CD or GitOps pipelines, Kubernetes rolling updates, and built-in rollback capabilities to deliver reliable, repeatable, and zero-downtime application releases.**
