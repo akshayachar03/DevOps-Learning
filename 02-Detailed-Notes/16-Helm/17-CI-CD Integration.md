@@ -2,35 +2,35 @@
 
 ## Overview
 
-CI/CD Integration with Helm automates the packaging, validation, testing, deployment, and lifecycle management of Kubernetes applications.
+CI/CD Integration with Helm automates the packaging, deployment, upgrade, and rollback of Kubernetes applications within Continuous Integration and Continuous Delivery (CI/CD) pipelines.
 
-Helm integrates seamlessly with popular CI/CD platforms such as:
+Helm is commonly integrated with CI/CD tools such as:
 
 - Jenkins
 - Azure DevOps
 - GitHub Actions
 - GitLab CI
-- Argo CD
+- Argo CD (GitOps)
 
-Using Helm in CI/CD pipelines ensures consistent, repeatable, and version-controlled deployments across development, testing, staging, and production environments.
+Helm enables consistent deployments across multiple Kubernetes environments using reusable charts and environment-specific configuration.
 
 > **Interview Tip**
 >
-> Helm is commonly used as the deployment tool in Kubernetes-based CI/CD pipelines, while tools like Jenkins, GitHub Actions, Azure DevOps, and GitLab CI orchestrate the pipeline.
+> CI/CD tools execute Helm commands to deploy applications, while GitOps tools like Argo CD continuously synchronize Kubernetes clusters using Helm charts stored in Git.
 
 ---
 
 ## Why It Is Used
 
-CI/CD integration with Helm helps to:
+Helm integration with CI/CD helps to:
 
 - Automate Kubernetes deployments
 - Standardize deployments across environments
-- Version application releases
-- Reduce manual deployment errors
+- Reduce manual intervention
+- Enable version-controlled releases
 - Support automated rollbacks
-- Enable GitOps workflows
 - Improve deployment consistency
+- Simplify application upgrades
 
 ---
 
@@ -39,40 +39,14 @@ CI/CD integration with Helm helps to:
 ```mermaid
 flowchart LR
 
-Developer
-      │
-      ▼
-Git Repository
-      │
-      ▼
-CI Pipeline
-(Build/Test/Lint)
-      │
-      ▼
-Helm Package
-      │
-      ▼
-Container Registry
-      │
-      ▼
-CD Pipeline
-      │
-      ▼
-Helm Deploy
-      │
-      ▼
-Kubernetes Cluster
+A[Developer] --> B[Git Repository]
+B --> C[CI/CD Pipeline]
+C --> D[Build Docker Image]
+D --> E[Push Image Registry]
+E --> F[Helm Upgrade or Install]
+F --> G[Kubernetes Cluster]
+G --> H[Application Running]
 ```
-
-### Working Process
-
-1. Developer pushes code.
-2. CI pipeline builds and tests the application.
-3. Docker image is created and pushed.
-4. Helm chart is validated.
-5. Helm package is generated.
-6. Deployment is executed using Helm.
-7. Kubernetes updates the application.
 
 ---
 
@@ -80,12 +54,12 @@ Kubernetes Cluster
 
 | Component | Purpose |
 |-----------|----------|
-| Git Repository | Stores source code |
-| CI Pipeline | Build and validation |
-| Helm Chart | Kubernetes package |
-| Container Registry | Stores images |
-| Kubernetes Cluster | Deployment target |
-| Helm CLI | Deployment tool |
+| Source Repository | Stores application code and Helm charts |
+| CI/CD Pipeline | Automates build and deployment |
+| Docker Registry | Stores application images |
+| Helm | Deploys Kubernetes resources |
+| Kubernetes Cluster | Runs applications |
+| Values Files | Environment-specific configuration |
 
 ---
 
@@ -93,11 +67,11 @@ Kubernetes Cluster
 
 | Integration | Purpose |
 |-------------|----------|
-| Jenkins | Pipeline automation |
-| Azure DevOps | Microsoft CI/CD |
-| GitHub Actions | GitHub-native CI/CD |
-| GitLab CI | GitLab pipelines |
-| Argo CD | GitOps Continuous Delivery |
+| Helm + Jenkins | CI/CD automation |
+| Helm + Azure DevOps | Azure Kubernetes deployments |
+| Helm + GitHub Actions | GitHub-based automation |
+| Helm + GitLab CI | GitLab pipelines |
+| Helm + Argo CD | GitOps Continuous Delivery |
 
 ---
 
@@ -106,47 +80,33 @@ Kubernetes Cluster
 ```mermaid
 flowchart LR
 
-Code Commit
-      │
-      ▼
-Build
-      │
-      ▼
-Test
-      │
-      ▼
-Docker Build
-      │
-      ▼
-Push Image
-      │
-      ▼
-Helm Upgrade
-      │
-      ▼
-Kubernetes
+A[Code Commit]
+A --> B[Build]
+B --> C[Test]
+C --> D[Build Docker Image]
+D --> E[Push Image]
+E --> F[Update Helm Values]
+F --> G[Helm Upgrade]
+G --> H[Kubernetes Deployment]
+H --> I[Verify Deployment]
 ```
 
 ---
 
 ## Configuration / Syntax (if applicable)
 
-Typical deployment
+Typical deployment command
 
 ```bash
-helm upgrade --install myapp ./chart
+helm upgrade --install myapp ./chart \
+-f values-prod.yaml
 ```
 
 Dry run
 
 ```bash
-helm upgrade --install myapp ./chart --dry-run
-```
-
-Lint
-
-```bash
-helm lint
+helm upgrade --install myapp ./chart \
+--dry-run --debug
 ```
 
 ---
@@ -154,17 +114,23 @@ helm lint
 ## Important Commands (if applicable)
 
 ```bash
+helm install
+
+helm upgrade
+
+helm rollback
+
 helm lint
 
 helm template
 
 helm package
 
-helm install
+helm dependency update
 
-helm upgrade
+helm history
 
-helm rollback
+helm status
 
 helm test
 ```
@@ -180,17 +146,21 @@ values.yaml
 
 values-dev.yaml
 
+values-stage.yaml
+
 values-prod.yaml
 
 templates/
 
-Jenkinsfile
-
-azure-pipelines.yml
+Chart.lock
 
 .github/workflows/
 
+azure-pipelines.yml
+
 .gitlab-ci.yml
+
+Jenkinsfile
 ```
 
 ---
@@ -198,57 +168,57 @@ azure-pipelines.yml
 ## Real-World Use Cases
 
 - Automated Kubernetes deployments
-- Multi-environment deployment
+- Enterprise CI/CD pipelines
 - Blue-Green deployments
-- Canary releases
-- Production rollouts
-- GitOps workflows
+- Rolling updates
+- Multi-environment deployments
+- Automated release management
 
 ---
 
 ## Advantages
 
-- Automated deployments
-- Consistent environments
-- Easy rollback
-- Faster releases
-- Version-controlled deployments
-- Reduced human errors
+- Fully automated deployments
+- Consistent Kubernetes releases
+- Version-controlled infrastructure
+- Supports rollback
+- Environment-specific configuration
+- Easy integration with popular CI/CD platforms
 
 ---
 
 ## Limitations
 
 - Requires Kubernetes knowledge
-- Incorrect values may cause deployment failures
-- Pipeline permissions must be configured properly
-- Requires secure secret management
+- Incorrect values files can impact deployments
+- Runtime application issues cannot be detected by Helm alone
+- Additional tooling required for GitOps workflows
 
 ---
 
 ## Common Interview Questions (Concept Only)
 
 - Why is Helm used in CI/CD?
-- Which Helm command is commonly used for deployment?
+- How does Helm integrate with Jenkins?
+- What is the role of Helm in GitHub Actions?
+- How do Azure DevOps pipelines deploy Helm charts?
+- What is the difference between CI/CD and GitOps?
 - Why use `helm upgrade --install`?
-- What should be validated before deployment?
-- How do Helm and Docker work together?
-- Which CI/CD tools support Helm?
-- Can Helm perform rollbacks automatically?
-- How does Helm fit into GitOps?
-- Why use separate values files?
-- Where should Helm secrets be stored?
+- How are values files used in CI/CD?
+- How does Helm support rollback?
+- What artifacts are produced during CI/CD?
+- What are common Helm deployment stages?
 
 ---
 
 ## Common Mistakes
 
-- Deploying without linting
-- Skipping template validation
-- Hardcoding secrets
-- Using production values in development
-- Forgetting rollback strategy
-- Deploying without image version updates
+- Deploying without running `helm lint`
+- Using the `latest` image tag
+- Hardcoding production values
+- Skipping deployment validation
+- Not versioning Helm charts
+- Ignoring release history
 
 ---
 
@@ -257,27 +227,21 @@ azure-pipelines.yml
 | Problem | Cause | Solution |
 |----------|-------|----------|
 | Deployment failed | Invalid chart | Run `helm lint` |
-| Upgrade failed | Incorrect values | Validate values files |
-| Image not updated | Old image tag | Use unique image tags |
-| Rollback unavailable | No revision history | Check `helm history` |
-| Kubernetes error | Resource conflict | Inspect Kubernetes events |
-| CI pipeline failed | Authentication issue | Verify cluster credentials |
+| Upgrade failed | Invalid values | Validate values files |
+| Image not found | Incorrect image tag | Verify image repository |
+| Kubernetes validation failed | Invalid manifests | Run `helm template` |
+| Release failed | Cluster issue | Check Kubernetes events |
+| Rollback required | Failed deployment | Use `helm rollback` |
 
 ---
 
 ## Summary
 
-Helm integrates with modern CI/CD platforms to automate Kubernetes application deployments, providing version-controlled, repeatable, and reliable release management.
+Helm integrates seamlessly with modern CI/CD platforms to automate Kubernetes deployments, manage application releases, support environment-specific configurations, and provide reliable rollback capabilities.
 
 > **Interview Tip**
 >
-> In production, the most common deployment command is:
-
-```bash
-helm upgrade --install
-```
-
-It installs a release if it doesn't exist or upgrades it if it already exists.
+> Helm is the deployment tool inside the CI/CD pipeline. The pipeline builds the application, while Helm deploys it to Kubernetes.
 
 ---
 
@@ -285,15 +249,23 @@ It installs a release if it doesn't exist or upgrades it if it already exists.
 
 ## Overview
 
-Jenkins uses Helm to deploy Kubernetes applications after building and testing the application.
+Jenkins integrates with Helm to automate Kubernetes deployments after successful builds.
+
+The typical Jenkins pipeline:
+
+1. Pull source code
+2. Build application
+3. Build Docker image
+4. Push image
+5. Deploy using Helm
 
 ---
 
 ## Why It Is Used
 
-- Automated deployments
-- CI/CD pipelines
-- Kubernetes releases
+- Automate Kubernetes deployments
+- Reduce manual releases
+- Continuous Delivery
 
 ---
 
@@ -302,22 +274,29 @@ Jenkins uses Helm to deploy Kubernetes applications after building and testing t
 ```mermaid
 flowchart LR
 
-Git --> Jenkins --> Helm --> Kubernetes
+A[Jenkins]
+A --> B[Build Application]
+B --> C[Docker Image]
+C --> D[Container Registry]
+D --> E[Helm Upgrade]
+E --> F[Kubernetes Cluster]
 ```
 
 ---
 
 ## Key Components
 
+- Jenkins
 - Jenkinsfile
-- Helm CLI
-- Kubernetes Cluster
+- Helm
+- Kubernetes
+- Docker Registry
 
 ---
 
 ## Types (if applicable)
 
-Pipeline deployment
+Pipeline-based deployment
 
 ---
 
@@ -326,15 +305,275 @@ Pipeline deployment
 ```mermaid
 flowchart LR
 
-Build --> Test --> Helm Deploy
+A[Git Commit]
+A --> B[Jenkins Pipeline]
+B --> C[Helm Deploy]
+C --> D[Production]
 ```
 
 ---
 
 ## Configuration / Syntax (if applicable)
 
+Typical Jenkins stage
+
+```groovy
+sh 'helm upgrade --install myapp ./chart'
+```
+
+---
+
+## Important Commands (if applicable)
+
 ```bash
-helm upgrade --install myapp ./chart
+helm upgrade
+
+helm lint
+
+helm test
+```
+
+---
+
+## Important Files (if applicable)
+
+```
+Jenkinsfile
+
+Chart.yaml
+
+values.yaml
+```
+
+---
+
+## Real-World Use Cases
+
+- Enterprise CI/CD
+- Automated production deployments
+
+---
+
+## Advantages
+
+- Mature CI/CD platform
+- Easy pipeline customization
+
+---
+
+## Limitations
+
+- Requires Jenkins infrastructure
+
+---
+
+## Common Interview Questions (Concept Only)
+
+- How is Helm used in Jenkins?
+- Where are Helm commands executed?
+
+---
+
+## Common Mistakes
+
+- Missing Kubernetes credentials
+
+---
+
+## Troubleshooting
+
+Verify Jenkins Kubernetes credentials and Helm installation.
+
+---
+
+## Summary
+
+Jenkins executes Helm commands as part of automated deployment pipelines.
+
+---
+
+# Helm in Azure DevOps
+
+## Overview
+
+Azure DevOps integrates Helm into Azure Pipelines to deploy applications to AKS or other Kubernetes clusters.
+
+---
+
+## Why It Is Used
+
+- Azure-native CI/CD
+- AKS deployments
+- Automated upgrades
+
+---
+
+## Architecture / Working
+
+```mermaid
+flowchart LR
+
+A[Azure Repos]
+A --> B[Azure Pipeline]
+B --> C[Helm Deploy]
+C --> D[AKS Cluster]
+```
+
+---
+
+## Key Components
+
+- Azure Pipelines
+- Helm
+- AKS
+
+---
+
+## Types (if applicable)
+
+Azure Pipeline deployment
+
+---
+
+## Lifecycle / Workflow
+
+```mermaid
+flowchart LR
+
+A[Commit]
+A --> B[Build]
+B --> C[Deploy]
+```
+
+---
+
+## Configuration / Syntax (if applicable)
+
+```yaml
+- script: helm upgrade --install myapp ./chart
+```
+
+---
+
+## Important Commands (if applicable)
+
+```bash
+helm upgrade
+
+helm lint
+```
+
+---
+
+## Important Files (if applicable)
+
+```
+azure-pipelines.yml
+```
+
+---
+
+## Real-World Use Cases
+
+- AKS deployments
+
+---
+
+## Advantages
+
+- Native Azure integration
+
+---
+
+## Limitations
+
+- Azure DevOps configuration required
+
+---
+
+## Common Interview Questions (Concept Only)
+
+- How does Azure DevOps deploy Helm charts?
+
+---
+
+## Common Mistakes
+
+- Missing AKS service connection
+
+---
+
+## Troubleshooting
+
+Validate Azure service connection and Kubernetes context.
+
+---
+
+## Summary
+
+Azure DevOps automates Helm deployments to Kubernetes through Azure Pipelines.
+
+---
+
+# Helm in GitHub Actions
+
+## Overview
+
+GitHub Actions automates Helm deployments using workflow files stored in the repository.
+
+---
+
+## Why It Is Used
+
+- Native GitHub CI/CD
+- Kubernetes automation
+
+---
+
+## Architecture / Working
+
+```mermaid
+flowchart LR
+
+A[GitHub Repository]
+A --> B[GitHub Actions]
+B --> C[Helm Deploy]
+C --> D[Kubernetes]
+```
+
+---
+
+## Key Components
+
+- Workflow
+- Helm
+- Kubernetes
+
+---
+
+## Types (if applicable)
+
+Workflow automation
+
+---
+
+## Lifecycle / Workflow
+
+```mermaid
+flowchart LR
+
+A[Push]
+A --> B[Workflow]
+B --> C[Helm]
+C --> D[Deploy]
+```
+
+---
+
+## Configuration / Syntax (if applicable)
+
+```yaml
+- run: helm upgrade --install myapp ./chart
 ```
 
 ---
@@ -352,236 +591,6 @@ helm upgrade
 ## Important Files (if applicable)
 
 ```
-Jenkinsfile
-```
-
----
-
-## Real-World Use Cases
-
-- Enterprise CI/CD
-
----
-
-## Advantages
-
-- Highly customizable
-
----
-
-## Limitations
-
-- Requires Jenkins maintenance
-
----
-
-## Common Interview Questions (Concept Only)
-
-- How is Helm used in Jenkins?
-
----
-
-## Common Mistakes
-
-- Missing Kubernetes credentials
-
----
-
-## Troubleshooting
-
-Verify kubeconfig.
-
----
-
-## Summary
-
-Jenkins executes Helm deployments as part of CI/CD pipelines.
-
----
-
-# Helm in Azure DevOps
-
-## Overview
-
-Azure DevOps integrates Helm through Azure Pipelines to automate Kubernetes deployments.
-
----
-
-## Why It Is Used
-
-- AKS deployments
-- Enterprise automation
-
----
-
-## Architecture / Working
-
-```mermaid
-flowchart LR
-
-Azure Repo --> Azure Pipeline --> Helm --> AKS
-```
-
----
-
-## Key Components
-
-- Azure Pipelines
-- Service Connection
-- Helm
-
----
-
-## Types (if applicable)
-
-Cloud-native deployment
-
----
-
-## Lifecycle / Workflow
-
-```mermaid
-flowchart LR
-
-Build --> Release --> Helm Deploy
-```
-
----
-
-## Configuration / Syntax (if applicable)
-
-```bash
-helm upgrade --install
-```
-
----
-
-## Important Commands (if applicable)
-
-```bash
-helm upgrade
-```
-
----
-
-## Important Files (if applicable)
-
-```
-azure-pipelines.yml
-```
-
----
-
-## Real-World Use Cases
-
-- Azure Kubernetes Service
-
----
-
-## Advantages
-
-- Native Azure integration
-
----
-
-## Limitations
-
-- Azure configuration required
-
----
-
-## Common Interview Questions (Concept Only)
-
-- How is Helm used in Azure DevOps?
-
----
-
-## Common Mistakes
-
-- Incorrect service connections
-
----
-
-## Troubleshooting
-
-Verify Azure authentication.
-
----
-
-## Summary
-
-Azure DevOps automates AKS deployments using Helm.
-
----
-
-# Helm in GitHub Actions
-
-## Overview
-
-GitHub Actions automates Helm deployments using workflow files stored in the repository.
-
----
-
-## Why It Is Used
-
-- GitHub-native CI/CD
-- Kubernetes automation
-
----
-
-## Architecture / Working
-
-```mermaid
-flowchart LR
-
-GitHub --> Actions --> Helm --> Kubernetes
-```
-
----
-
-## Key Components
-
-- Workflow
-- Helm
-- Kubernetes
-
----
-
-## Types (if applicable)
-
-GitHub automation
-
----
-
-## Lifecycle / Workflow
-
-```mermaid
-flowchart LR
-
-Push --> Workflow --> Deploy
-```
-
----
-
-## Configuration / Syntax (if applicable)
-
-```bash
-helm upgrade --install
-```
-
----
-
-## Important Commands (if applicable)
-
-```bash
-helm upgrade
-```
-
----
-
-## Important Files (if applicable)
-
-```
 .github/workflows/deploy.yml
 ```
 
@@ -589,43 +598,43 @@ helm upgrade
 
 ## Real-World Use Cases
 
-- GitHub-hosted projects
+- Kubernetes deployments
 
 ---
 
 ## Advantages
 
-- Simple integration
+- Native GitHub integration
 
 ---
 
 ## Limitations
 
-- GitHub permissions required
+- Requires GitHub secrets
 
 ---
 
 ## Common Interview Questions (Concept Only)
 
-- How does GitHub Actions deploy Helm charts?
+- How does GitHub Actions use Helm?
 
 ---
 
 ## Common Mistakes
 
-- Missing Kubernetes secrets
+- Missing kubeconfig
 
 ---
 
 ## Troubleshooting
 
-Verify GitHub Secrets.
+Verify workflow secrets and Kubernetes authentication.
 
 ---
 
 ## Summary
 
-GitHub Actions uses Helm for Kubernetes deployments.
+GitHub Actions executes Helm commands as part of automated workflows.
 
 ---
 
@@ -633,14 +642,14 @@ GitHub Actions uses Helm for Kubernetes deployments.
 
 ## Overview
 
-GitLab CI automates Kubernetes deployments using GitLab pipelines and Helm.
+GitLab CI/CD pipelines deploy Helm charts to Kubernetes clusters after successful builds.
 
 ---
 
 ## Why It Is Used
 
-- Automated releases
-- GitLab DevOps platform
+- Integrated GitLab automation
+- Kubernetes deployments
 
 ---
 
@@ -649,7 +658,10 @@ GitLab CI automates Kubernetes deployments using GitLab pipelines and Helm.
 ```mermaid
 flowchart LR
 
-GitLab --> GitLab CI --> Helm --> Kubernetes
+A[GitLab Repository]
+A --> B[GitLab Runner]
+B --> C[Helm]
+C --> D[Kubernetes]
 ```
 
 ---
@@ -664,7 +676,7 @@ GitLab --> GitLab CI --> Helm --> Kubernetes
 
 ## Types (if applicable)
 
-GitLab deployment
+Pipeline deployment
 
 ---
 
@@ -673,15 +685,18 @@ GitLab deployment
 ```mermaid
 flowchart LR
 
-Commit --> Pipeline --> Helm Deploy
+A[Commit]
+A --> B[Pipeline]
+B --> C[Deploy]
 ```
 
 ---
 
 ## Configuration / Syntax (if applicable)
 
-```bash
-helm upgrade --install
+```yaml
+script:
+  - helm upgrade --install myapp ./chart
 ```
 
 ---
@@ -704,13 +719,13 @@ helm upgrade
 
 ## Real-World Use Cases
 
-- GitLab-hosted environments
+- GitLab-based Kubernetes deployments
 
 ---
 
 ## Advantages
 
-- Integrated DevOps platform
+- Built-in CI/CD
 
 ---
 
@@ -722,25 +737,25 @@ helm upgrade
 
 ## Common Interview Questions (Concept Only)
 
-- How does GitLab CI use Helm?
+- How is Helm used in GitLab CI?
 
 ---
 
 ## Common Mistakes
 
-- Missing cluster authentication
+- Missing Kubernetes credentials
 
 ---
 
 ## Troubleshooting
 
-Verify GitLab Runner permissions.
+Verify GitLab Runner permissions and cluster connectivity.
 
 ---
 
 ## Summary
 
-GitLab CI automates Helm deployments through pipeline stages.
+GitLab CI automates Helm deployments using pipeline jobs.
 
 ---
 
@@ -748,13 +763,13 @@ GitLab CI automates Helm deployments through pipeline stages.
 
 ## Overview
 
-Argo CD is a GitOps Continuous Delivery tool that deploys Helm Charts directly from Git repositories.
+Argo CD uses Helm charts as an application source for GitOps-based Continuous Delivery.
 
-Unlike Jenkins or GitHub Actions, Argo CD continuously monitors Git repositories and automatically synchronizes Kubernetes clusters.
+Unlike Jenkins or GitHub Actions, Argo CD continuously monitors Git and synchronizes Kubernetes clusters automatically.
 
-> **Interview Tip**
+> **Important Interview Point**
 >
-> Argo CD does **not** replace Helm. It **uses Helm as a rendering engine** while Git remains the source of truth.
+> Argo CD uses Helm to render templates but does **not** manage Helm releases using `helm install` or `helm upgrade`.
 
 ---
 
@@ -762,8 +777,8 @@ Unlike Jenkins or GitHub Actions, Argo CD continuously monitors Git repositories
 
 - GitOps deployments
 - Continuous synchronization
-- Automatic drift correction
-- Self-healing applications
+- Drift detection
+- Self-healing
 
 ---
 
@@ -772,16 +787,10 @@ Unlike Jenkins or GitHub Actions, Argo CD continuously monitors Git repositories
 ```mermaid
 flowchart LR
 
-Git Repository
-      │
-      ▼
-Argo CD
-      │
-      ▼
-Helm Template Rendering
-      │
-      ▼
-Kubernetes Cluster
+A[Git Repository]
+A --> B[Argo CD]
+B --> C[Render Helm Chart]
+C --> D[Kubernetes Cluster]
 ```
 
 ---
@@ -789,15 +798,15 @@ Kubernetes Cluster
 ## Key Components
 
 - Git Repository
-- Helm Chart
 - Argo CD
+- Helm Chart
 - Kubernetes Cluster
 
 ---
 
 ## Types (if applicable)
 
-GitOps deployment
+GitOps Continuous Delivery
 
 ---
 
@@ -806,26 +815,17 @@ GitOps deployment
 ```mermaid
 flowchart LR
 
-Git Commit
-      │
-      ▼
-Argo CD Detects Change
-      │
-      ▼
-Helm Rendering
-      │
-      ▼
-Sync
-      │
-      ▼
-Kubernetes
+A[Git Commit]
+A --> B[Argo CD Detects Change]
+B --> C[Render Helm Chart]
+C --> D[Synchronize Cluster]
 ```
 
 ---
 
 ## Configuration / Syntax (if applicable)
 
-Helm Charts are referenced in the Argo CD Application manifest.
+Argo CD references the Helm chart within an `Application` resource.
 
 ---
 
@@ -853,103 +853,71 @@ values.yaml
 
 ## Real-World Use Cases
 
-- GitOps
-- Multi-cluster deployment
-- Automated synchronization
+- Enterprise GitOps
+- Multi-cluster deployments
+- Automated Kubernetes synchronization
 
 ---
 
 ## Advantages
 
-- Continuous deployment
-- Self-healing
+- Git as the source of truth
+- Automated synchronization
 - Drift detection
-- Git as source of truth
+- Self-healing
 
 ---
 
 ## Limitations
 
-- Requires GitOps workflow
-- Additional Argo CD components
+- Requires Argo CD installation
+- Relies on Git repository availability
 
 ---
 
 ## Common Interview Questions (Concept Only)
 
-- Does Argo CD replace Helm?
 - How does Argo CD use Helm?
-- What is GitOps?
+- Does Argo CD run `helm install`?
+- What is the difference between Helm CLI and Argo CD?
 
 ---
 
 ## Common Mistakes
 
-- Editing resources manually
-- Ignoring Git as source of truth
+- Treating Argo CD as a Helm release manager
+- Making manual cluster changes outside Git
 
 ---
 
 ## Troubleshooting
 
-Verify repository synchronization.
+Verify application synchronization status, Git repository connectivity, and rendered manifests.
 
 ---
 
 ## Summary
 
-Argo CD uses Helm to render Kubernetes manifests while continuously synchronizing the cluster with the desired state stored in Git.
+Argo CD integrates with Helm by rendering Helm charts from Git repositories and continuously synchronizing Kubernetes clusters using GitOps principles.
 
 ---
 
 # Interview Quick Revision
 
-## CI/CD Deployment Workflow
+## CI/CD Pipeline with Helm
 
-```text
-Developer Commit
-        ↓
-CI Pipeline
-(Build → Test → Docker Build)
-        ↓
-Push Docker Image
-        ↓
-helm lint
-        ↓
-helm template
-        ↓
-helm upgrade --install
-        ↓
-Kubernetes Deployment
-        ↓
-helm test
+```mermaid
+flowchart LR
+
+A[Developer]
+A --> B[Git Repository]
+B --> C[CI/CD Pipeline]
+C --> D[Build Docker Image]
+D --> E[Push Image]
+E --> F[Helm Upgrade]
+F --> G[Kubernetes Cluster]
+G --> H[Application Running]
 ```
-
----
-
-## CI/CD Tool Comparison
-
-| Tool | Role | Uses Helm? |
-|------|------|------------|
-| Jenkins | CI/CD Automation | ✅ Yes |
-| Azure DevOps | CI/CD | ✅ Yes |
-| GitHub Actions | CI/CD | ✅ Yes |
-| GitLab CI | CI/CD | ✅ Yes |
-| Argo CD | GitOps Continuous Delivery | ✅ Yes |
-
----
-
-## Frequently Used Helm Commands in CI/CD
-
-| Command | Purpose |
-|----------|---------|
-| `helm lint` | Validate chart |
-| `helm template` | Render manifests locally |
-| `helm package` | Package chart |
-| `helm install` | Install release |
-| `helm upgrade --install` | Install or upgrade release |
-| `helm rollback` | Restore previous release |
-| `helm test` | Run post-deployment tests |
 
 ---
 
@@ -957,25 +925,38 @@ helm test
 
 | CI/CD | GitOps |
 |--------|--------|
-| Pipeline triggers deployment | Git repository triggers deployment |
 | Push-based deployment | Pull-based deployment |
-| Jenkins, GitHub Actions, Azure DevOps | Argo CD, Flux CD |
-| Executes deployment commands | Continuously synchronizes cluster state |
+| Pipeline triggers deployment | GitOps controller synchronizes cluster |
+| Jenkins, Azure DevOps, GitHub Actions, GitLab CI | Argo CD, Flux |
+| Executes Helm CLI commands | Uses Helm charts as deployment source |
+
+---
+
+## CI/CD Tool Comparison
+
+| Tool | Helm Support | Primary Use |
+|------|--------------|-------------|
+| Jenkins | Executes Helm CLI | Enterprise CI/CD |
+| Azure DevOps | Azure Pipelines | AKS deployments |
+| GitHub Actions | Workflow automation | GitHub-based CI/CD |
+| GitLab CI | Pipeline automation | GitLab-native CI/CD |
+| Argo CD | GitOps with Helm charts | Continuous Delivery |
 
 ---
 
 ## Production Best Practices
 
-- Always run `helm lint` and `helm template` before deployment.
-- Use `helm upgrade --install` to simplify deployment logic in pipelines.
-- Store environment-specific configuration in separate values files.
-- Avoid hardcoding secrets; use Kubernetes Secrets or external secret managers.
-- Tag Docker images with immutable versions and reference those tags in Helm values.
-- Enable automated rollback or monitor deployment health after upgrades.
-- In GitOps workflows, treat Git as the single source of truth and avoid manual changes in the cluster.
+- Run `helm lint` before every deployment.
+- Validate rendered manifests using `helm template`.
+- Use `helm upgrade --install` for idempotent deployments.
+- Store Kubernetes credentials securely using CI/CD secrets.
+- Use separate values files for development, staging, and production.
+- Version Helm charts and application images independently.
+- Avoid using mutable image tags such as `latest`.
+- Monitor deployment health and maintain rollback procedures.
 
 ---
 
 ## One-line Interview Answer
 
-**Helm integrates with CI/CD platforms such as Jenkins, Azure DevOps, GitHub Actions, GitLab CI, and Argo CD to automate the packaging, validation, deployment, upgrade, and rollback of Kubernetes applications, enabling consistent, repeatable, and production-ready releases.**
+**Helm integrates with CI/CD platforms such as Jenkins, Azure DevOps, GitHub Actions, and GitLab CI to automate Kubernetes deployments, while GitOps tools like Argo CD use Helm charts stored in Git to continuously synchronize the cluster with the desired state.**
